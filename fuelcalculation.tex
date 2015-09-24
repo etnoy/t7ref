@@ -1,0 +1,64 @@
+\documentclass[tikz]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+\begin{document}
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!30]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
+\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=orange!30]
+\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30]
+\begin{tikzpicture}
+\node (start) [startstop] {Start};
+\node (compensation) [process,below= of start] {Compensation};
+\node (closedloop) [process,below=of compensation] {Closed loop};
+\node (purge) [process,below=of compensation] {Correction for purge};
+\node (multiplicative) [process,below=of purge] {Multiplicative (long-term)
+adaptation};
+\node (additive) [process,below=of multiplicative] {Additive adaptation};
+\node (starting) [process,below=of additive] {Starting fuel quantity};
+\node (quantity) [process,below=of starting] {Fuel quantity per combustion};
+\node (duration) [process,below=of quantity] {Injector opening duration};
+\node (twice) [process,below=of duration] {Injection twice per combustion};
+\node (voltage) [process,below=of twice] {Voltage-dependent correction};
+\node (fuelcut) [process,below=of voltage] {Fuel cut};
+\node (activation) [startstop,below=of fuelcut] {Activation};
+\end{tikzpicture}
+
+\begin{comment}
+
+\begin{description}
+    \item[Compensation] In case of a cold engine, shortly after starting, rapid
+        load changes, knocking or high loads, the current
+        value is multiplied by a compensation factor
+    \item [Closed loop] The closed loop value is used as a multiplier. The
+        value is then sent to box 4
+    \item[Correction for purge] Multiply by the value for purge adaptation. The
+        value is sent to box 5
+    \item[Multiplicative adaptation (long term fuel trim)] The multiplicative adaptation value is used as a
+        multiplier and the new value is sent to box 6
+    \item[Additive adaptation] The additive adaptation value is added and the new
+        value is sent to box 7
+    \item[Starting fuel quantity] If the engine has not yet started, starting fuel is
+        selected. The value is sent to box 8
+    \item[Fuel quantity per combustion to be injected] The fuel quantity per combustion is the amount of
+        petrol to be supplied to the engine. The value is sent
+        to box 9
+    \item[Injector opening duration] Converts the value to the time during which the
+        injector must be open and the new value is sent to
+        box 10
+    \item[Injection twice per combustion] Injection takes place twice per combustion until the
+        camshaft position has been found. Injection duration
+        is divided by two. The value is sent to box 11
+    \item[Voltage dependant needle lift duration added
+        (battery correction)]
+        Adds the injector time delay, which is voltage
+        dependant. The value is sent to box 12
+    \item[ Fuel cut] The value is sent to box 13 unless fuel cut is active
+    \item[ Activation of injector] At a DETERMINED crank shaft angle, the
+        microprocessor will control the transistor for the
+        injector that is next in the firing order
+\end{description}
+\end{comment}
+
+\end{document}
+
+

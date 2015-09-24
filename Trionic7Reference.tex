@@ -23,7 +23,9 @@
 \usepackage{tcolorbox}
 \tcbuselibrary{listingsutf8,breakable,theorems,skins}
 %The paper size for this thesis is the Swedish format s5
-\usepackage{siunitx}
+\usepackage
+[binary-units=true]
+{siunitx}
 \usepackage{lmodern}
 \usepackage{verbatim}
 \usepackage{todonotes}
@@ -50,6 +52,7 @@
 \graphicspath{{./graphics/}}
 \definecolor{theWhite}{gray}{0.9}
 \definecolor{theBlack}{gray}{0.2}
+\makeindex
 
 %% If the following definition throws an error, you'll need a newer version of your
 % Latex distribution (from at least the second half of 2013)
@@ -106,19 +109,18 @@ Nilsson, Hook, Hma, Vigge, Mackan, Sandy Rus, JKB, L4staero and Steve Hayes.
 \tableofcontents
 
 \chapter{Hardware}
-The T7 is build around a Motorola MC68332 (CPU32) microcontroller. This is a 32
-bit controller that handles the entire motor management including fuel
+The T7 is build around a Motorola MC68332 (CPU32) microcontroller. This is a 32-bit controller that handles the entire motor management including fuel
 injection, ignition timing and boost pressure control. The processor has a vast
-4Mb (512 Kbyte) flash memory for fetching program code and maps. This flash
+\SI{4}{\mega\byte} (\SI{512}{\kilo\byte}) flash memory for fetching program code and maps. This flash
 memory consisting of a AM29F400BT-90SI (AMD) holds the program memory. There is
 a coprocessor from Philips, a P83C592FHA/019. This is a 8-bit 8051-based
 microcontroller with a CAN (Controller Area Network) module. As the CAN physical
 line driver there is an Intel AN82527 (same family as used in Trionic 5). RAM
-memory is done by two 32 Kbit SRAM chips (U62H256S1K). There is also a special
+memory is done by two \SI{32}{\kilo\bit} SRAM chips (U62H256S1K). There is also a special
 component that would appear to be a barometric pressure sensor.
 
 \section{Integrated Circuit List}
-The table below lists almost all IC’s on the board. This is just to give you an idea on what to expect.
+The table below lists almost all integrated circuits on the board. This is just to give you an idea on what to expect.
 
 \begin{table}
     \centering
@@ -128,7 +130,7 @@ The table below lists almost all IC’s on the board. This is just to give you a
         TC55257DFI-85L & SRAM & (working memory) & 1 \\
         16233970 & Microcontroller & Main 32-bit CPU & 1 \\
         PC83C592 & Microcontroller with CAN contr.& 8-bit coprocessor & 1 \\
-        AM29F400 & Flash memory & 4 Mbit & 1 \\
+        AM29F400 & Flash memory & \SI{4}{\mega\bit} & 1 \\
         51862 & DA converter & & 1 \\
         AN82527 & CAN controller    CAN line driver & 1 \\
         16238669 0H11 & Pressure sensor? & &  1
@@ -177,77 +179,81 @@ pattern searching. Again the calculations are pretty simple, and even the harder
 checksum is easy to implement. Big thanks to solving these things goes to Tomi
 and General Failure.
 
-\section{Checksum lexicon}
+\section{Checksums}
 First of all, there are four different checksums. They have been given names by
-Tomi: FB checksum, F2 checksum, Misc checksum and Area 70000 checksum.
+Tomi\todo{Who is this?}: \texttt{FB}\index{FB checksum} checksum,
+\texttt{F2}\index{F2 checksum} checksum,
+\texttt{Misc} checksum\index{Misc checksum}, and \texttt{Area 70000}
+checksum\index{Area 7000 checksum}.
 
-\section{F2 and FB checksums}
-The first two checksums, FB and F2, can be found at the end of the binary. This
+
+\subsection{FB and F2 checksums}\label{sec:FBF2Checksum}
+The first two checksums, \texttt{FB} and \texttt{F2}, can be found at the end of the binary. This
 end area has been called the file header (footer would be more logical). See
-also \todo{Add reference}chapter Trionic 7 file header. The F2 checksum is not
+also \todo{Add reference}chapter Trionic 7 file header. The \texttt{F2} checksum is not
 present in all binaries, so be aware of this. Finding the two other checksums is
 more of a challenge.
 
-\section{Misc. checksum}
-The Misc checksum resides inline within the code. It is usually found in the
-area of 0x02000...0x05000. The checksum address can be found by pattern
+\subsection{Misc checksum}
+The Misc checksum resides inline within the code. It is usually found somewhere
+between \texttt{0x02000} and \texttt{0x05000}. The checksum address can be found by pattern
 searching the bin file using a set of hex values along with mask bits. If a mask
 bit is not set, the corresponding hex value does not have to match. Here are the
-hex values, and the masks.
-Pattern
-\begin{verbatim}
-0x48,0xE7,0x00,0x3C,0x24,0x7C,0x00,0xF0,0x00,0x00,0x26,0x7C,0x00,0x00,0x00,0x00,0x28,0x7C,0x00,0xF0,0x00,0x00,0x2A,0x7C
-\end{verbatim}
-Mask
-\begin{verbatim}
-1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1
-\end{verbatim}
-So, we are searching the binary for a string of bytes beginning with 0x48, 0xE7, 0x00, 0x3C... Then
-we mask out the bytes that change from binary to binary. When we’ve located this pattern, we know
-where to start. Now we start primitively disassembling the code. we search for byte patterns
-[0x48,0x6D], [0x48,0x78], [0x48,0x79], [0x2A,0x7C] and [0xB0,0xB9]. The three first patterns reveal
-addresses and lengths of checksum areas. There are 15 checksums areas from which the Misc
-checksum is calculated. The [0x2A,0x7C] pattern gives a base address for the [0x48,0x6D] addresses.
-Bear with me. These [0x2A,0x7C] addresses are summed with the base address to make the actual
-address. This way the address is only 2 bytes long. On the [0x48,0x79] addresses it's 4 bytes long
-without any base address. And the [0x48,0x78] pattern gives 2 bytes which correspond with the
-length of the checksum area. Finally the [0xB0,0xB9] pattern is followed by 4 bytes to the address of
-the Misc checksum.
+hex values: \texttt{0x48, 0xE7, 0x00, 0x3C, 0x24, 0x7C, 0x00, 0xF0, 0x00, 0x00,
+    0x26, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x28, 0x7C, 0x00, 0xF0, 0x00, 0x00,
+    0x2A, 0x7C} and the mask is \texttt{1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
+    0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1}.
 
+So, we are searching the binary for a string of bytes beginning with 0x48, 0xE7,
+0x00, 0x3C... Then we mask out the bytes that change from binary to binary. When
+we've located this pattern, we know where to start. Now we start primitively
+disassembling the code. We search for byte patterns \texttt{0x48, 0x6D},
+\texttt{0x48, 0x78}, \texttt{0x48, 0x79}, \texttt{0x2A, 0x7C} and \texttt{0xB0,
+0xB9}. The three first patterns reveal addresses and lengths of checksum areas.
+There are 15 checksums areas from which the Misc checksum is calculated. The
+\texttt{0x2A, 0x7C} pattern gives a base address for the \texttt{0x48, 0x6D}
+addresses.
 
-\section{Area 70000 checksum}
-This checksum refers to an area in the region of 0x70000. Like the Misc checksum, there is no clean
-way of finding out the length of the area along with the checksum address. Using pattern searching
-with this also has results. There are binaries that are incompatible with this approach, so this requires
-some fixing in the future.
-Pattern
-\begin{verbatim}
-0x20,0x3c,0x00,0x00,0x11,0x52,0x2F,0x00,0x20,0x3C,0x00,0x00,0x09,0xD0,0x2F,0x00,0x20,0x3C,0x00,0x00,0x00,0xCC,0xD0,0x9F
-\end{verbatim}
-Mask
-\begin{verbatim}
-1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1
-\end{verbatim}
+Bear with me. These \texttt{0x2A, 0x7C} addresses are summed with the base
+address to make the actual address. This way the address is only 2 bytes long.
+On the \texttt{0x48, 0x79} addresses it's 4 bytes long without any base address.
+And the \texttt{0x48, 0x78} pattern gives 2 bytes which correspond with the
+length of the checksum area. Finally the \texttt{0xB0, 0xB9} pattern is followed
+by 4 bytes to the address of the Misc checksum.
 
+\subsection{Area 70000 checksum}
+\index{Area 7000 checksum}This checksum refers to an area in the region of
+\texttt{0x70000}. Like the \texttt{Misc} checksum, there is no clean way of
+finding out the length of the area along with the checksum address. Using
+pattern searching with this also has results. There are binaries that are
+incompatible with this approach, so this requires some fixing in the future. The
+pattern is \texttt{0x20, 0x3c, 0x00, 0x00, 0x11, 0x52, 0x2F, 0x00, 0x20, 0x3C,
+    0x00, 0x00, 0x09, 0xD0, 0x2F, 0x00, 0x20, 0x3C, 0x00, 0x00, 0x00, 0xCC,
+0xD0, 0x9F} and the mask is \texttt{1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1,
+1, 1, 1, 0, 0, 0, 0, 1, 1}
 
-After finding that pattern, the masked addresses are summed together. In the pattern, the original
-addresses are 0x00001152, 0x000009D0 and 0x000000CC. Summing these gives the Area 70000
-length of 0x1BEE. At the same time this is the address where to find the Area 70000 checksum.
+After finding that pattern, the masked addresses are summed together. In the
+pattern, the original addresses are \texttt{0x00001152}, \texttt{0x000009D0} and
+\texttt{0x000000CC}. Summing these gives the \texttt{Area 70000} length of
+\texttt{0x1BEE}. At the same time this is the address where to find the \texttt{Area
+70000} checksum.
 
-\section{How to calculate a checksum}
-The FB checksum shares the same calculation method as Misc and Area 70000 checksums. It's simply
-a sum of the bytes from the checksum area. Four bytes are made into a 32 bit value and summed
-with the next 32-bit value. This goes on until there are fewer than 4 bytes left. The last 1...3 bytes are
-then individually summed together with the checksum.
+\subsection{Misc. Checksum}
+The \texttt{Misc} checksum is a sum of the individual checksums calculated from 15 areas. The checksum
+calculation used is the same as with the \texttt{FB} checksum.
 
-\section{Misc checksum}
-The Misc checksum is a sum of the individual checksums calculated from 15 areas. The checksum
-calculation used is the same as with the FB checksum.
-
-\section{Area 70000 checksum}
-Once you have found the length of the Area 70000, you can calculate the checksum by using the
-function described in section “FB checksum”. The start address is 0x70000. Notice that your binary
+\subsection{Area 70000 Checksum}
+Once you have found the length of \texttt{Area 70000}, you can calculate the checksum by using the
+function described in \cref{sec:FBF2Checksum}. The start address is
+\texttt{0x70000}. Notice that your binary
 might not have this area present.
+
+\section{Computing a Checksum}
+The \texttt{FB} checksum shares the same calculation method as Misc and Area
+70000 checksums. It's simply a sum of the bytes from the checksum area. Four
+bytes are made into a 32 bit value and summed with the next 32-bit value. This
+goes on until there are fewer than 4 bytes left. The last 1, 2 or 3 bytes are
+then individually summed together with the checksum.
 
 \chapter{Firmware}
 
@@ -324,6 +330,13 @@ T7Suite groups all symbols by their respective category by default.
 \section{Fuel}
 Fuel calculation in Trionic 7 is based on the Airmass entering the engine. In rough steps this seems to
 be the calculation’s flow:
+
+\begin{figure}[<+htpb+>]
+    \centering
+    \includestandalone{fuelcalculation}
+    \caption{}
+    \label{fig:}
+\end{figure}
 
 \begin{description}
     \item[Basic calculation of fuel quantity per combustion] The current air mass/combustion is divided by 14.7
@@ -906,5 +919,7 @@ are based on the stock engine and won’t be properly calibrated for a stage 3+ 
 KnkDetAdap.KnkCntCyl first 2 bytes show cylinder 1 knock count, next 2 bytes shows cylinder
 2 knock count etc.
 \end{itemize}
+\appendix
+\printindex
 
 \end{document}
