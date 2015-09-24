@@ -42,11 +42,6 @@
 \usepackage[symbol]{footmisc}
 \usepackage{makeidx}
 \usepackage{helvet}
-\usepackage[style=numeric-comp,url=false,backend=biber,%
-    firstinits=true,sorting=none,sortfirstinits=true,clearlang=true,%
-    maxnames=3,minnames=1,uniquename=false,%
-    maxbibnames=10
-]{biblatex}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage{rotating}
@@ -77,7 +72,7 @@
 \newcommand{\Mfig}[1]{%
 \begin{figure}[<+htpb+>]
     \centering
-    \missingfigure{}
+    \missingfigure{#1}
     \caption{#1}
 \end{figure}}
 
@@ -90,6 +85,7 @@
 
 \maketitle
 \clearpage
+\listoftodos
 \chapter{Introduction}
 This document is intended for Saab fanatics and engineers who want to start
 understanding the Saab Trionic 7 motor management system. It will give as much
@@ -689,4 +685,226 @@ stage II equivalent. The example is a 9-3 B205R.
 Airmass value from controller where area map has reached max-area and there is no point to increase
 the I-part. Resolution is 1 mg/c
 \Mfig{AirCtrlCal.m\_MaxAirTab}
+
+\subsection{AirCtrlCal.m\_MaxAirE85Ta}
+( if running on E85 )
+Same as above for E85
+
+\subsection{BoostCal.I\_LimTab}
+Load limit tab. to enable the I Part of boost regulator. If the load request from Airmass master is
+above this value plus the hysteresis is the I Part enabled and the throttle closed loop is disabled. If
+the load request from Airmass master is below this value is the I Part disabled and the throttle is
+allowed to run in closed loop.
+
+\subsection{BoostCal.P\_LimTab}
+Load limit tab. to enable the P Part of boost regulator. If the load request from Airmass master is
+above this value plus the hysteresis is the P Part enabled. If the load request from Airmass master is
+below this value is the P Part disabled.
+
+\subsection{BoostCal.RegMap}
+Main constant matrix. Resolution is 0.1 \%.
+
+\subsection{BstKnkCal.MaxAirmass}
+(divide by 3,1 for approx torque, ignition, airtemp etc affect this!)
+Map for max allowed Airmass for manual gearbox, m\_nHigh. Resolution is 1 mg/c.
+
+\subsection{BstKnkCal.MaxAirmassAu}
+Map for max allowed Airmass for automatic gearbox, m\_nHigh. Resolution is 1 mg/c.
+
+\subsection{FCutCal.m\_AirInletLimit}
+If the "MAF.m\_AirInletFuel" is higher than this limit during m\_AirInletTime will the fuelcut be activated
+( pressure guard ).
+
+\subsection{IgnE85Cal.fi\_AbsMap}
+( if you want to change the ignition )
+Ignition map for E85 fuel. Resolution is 0.1 degrees.
+
+\subsection{IgnNormCal.Map}
+( if you want to change the ignition )
+Normal ignition map. Resolution is 0.1 degrees.
+
+\subsection{MapChkCal.CheckSum}
+(automatically updated in between every map
+change with T7suite!)
+
+\subsection{MaxVehicCal.v\_MaxSpeed}
+Speed limiter.
+
+\subsection{PedalMapCal.m\_RequestMap}
+Requested Airmass from the driver as a function of rpm and accelerator pedal position. Resolution is 1
+mg/c.
+\subsection{TorqueCal.M\_ManGearLim}
+Maximum engine torque limit for each gear in the manual gearbox. Resolution is 1 Nm.
+
+\subsection{TorqueCal.m\_AirTorqMap}
+(This is where all torque limiters take their data from and therefore
+needs to be "fooled" if you are running 400nm+ or an automatic!)
+Data-matrix for nominal Airmass. Engine speed and torque are used as support points. The value in
+the matrix + friction Airmass (idle Airmass) will create the pointed torque at the pointed engine speed.
+Resolution is 1 mg/c. axis to the above map: TorqueCal.m\_AirXSP
+
+\subsection{TorqueCal.M\_EngMaxTab}
+Data-table for maximum engine out put torque for manual cars. Resolution is 1 Nm.
+
+TorqueCal.M\_EngMaxAutTab
+Data-table for maximum engine output torque for automatic cars. Resolution is 1 Nm.
+
+TorqueCal.M\_5GearLimTab
+Data-table for maximum engine output torque for manual cars on fifth gear. Resolution is 1 Nm.
+
+
+TorqueCal.M\_EngMaxE85Tab ( if running on E85 )
+Data-table for maximum engine output torque when running on E85. Resolution is 1 Nm.
+
+TorqueCal.m\_PedYSP
+Air mass support points for (Calc) X\_AccPedalMap. Resolution is 1 mg/combustion.
+
+\section{Tuning Boost calibration}
+This map holds percentages (0.1\% accurate) of how much air should be passed to the return hose of
+the boost control value. The higher the value, to more air is bled off and the less the wastegate will
+open (and thus, the more air the turbo will be spooling). As you can see, the more Airmass is
+requested (x – axis) the more the wastegate is held shut and thus, the more Airmass the turbo will be
+providing. If we want more Airmass from the turbo, we need to keep the wastegate shut longer and
+thus we have to enter higher numbers on the right side of the table.
+
+\section{Altering Airmass limiter}
+To be able to flow more air though the engine that is allowed in the stock configuration we will have
+to modify the Airmass limiter tables as well. Note that there are two different ones, one for manual
+gearbox and one for automatic gearbox. This example will only show the manual gearbox table
+(BstKnkCal.MaxAirmass) but for automatic cars BstKnkCal.MaxAirMassAu needs to be changes.
+
+\Mfig{Altering airmass p37}
+
+As you can see, the maximum amount of Airmass allowed is approximately 970 mg/c. We need to
+change the table so that it will allow more Airmass. In this case we just up the
+table with 25\% with
+the math functions in T7Suite.
+NOTE: Please do not simply turn off this limiter by setting it way higher than the actually intended
+level because it is an important limiter to provide engine safety.
+
+\section{Altering fuelcut}
+Then there’s the fuelcut function to worry about. We need to increase the limit of what the fuel cut
+function will accept to prevent it from shutting of fuel too early.
+NOTE: Please do not simply turn off this limiter by setting it way higher as the actually intended level
+because it is an important limiter to provide engine safety.
+
+
+\section{Engine speed limiter}
+To prevent the system to reduce Airmass above engine speeds that are still acceptable we need to
+change MaxSpdCal.n\_EngLimAir as well. Y axis values are engine temperature (coolant). Please note
+that 200 rpm above this limit, the fuel cut mechanism will become active!
+\section{Vehicle speed limiter}
+An option is to increase the vehicle speed limiter as well. In this stock binary the vehicle speed is
+limited to 240 km/h. We can change it to – for example 280 km/h.
+
+
+\section{Airmass request}
+To get more from the engine than in the stock configuration we need to actually request more
+Airmass for a certain pedal position and rpm site. This can be done through
+PedalMapCal.m\_RequestMap. Because we want more power at wide open throttle (from the drivers
+perspective) we need to increase the Airmass request at pedal positions in the high percentage range
+(top of the table).
+
+As you can see we increased the top two rows so that a maximum of 1350 mg/c will be requested.
+In addition we need to alter the y axis support point for the pedal map that lets Trionic lookup a pedal
+position for a given Airmass. This map is called TorqueCal.m\_PedYSP. This axis map should support
+the maximum Airmass we’re requesting in the m\_Requestmap, so in our case we need to modify the
+map to match the 1350 mg/c we are requesting as a maximum.
+
+The map that uses this axis is called TorqueCal.x\_AccPedalMap. It it shown below with the altered
+axis values for clarification.
+
+\section{Torque limiter}
+To prevent to system to reduce Airmass above a certain engine output, the torque limiter needs to be
+increased according to expected engine output.
+
+\Mfig{Torque limiters}
+
+TorqueCal.m\_AirTorqMap (This is where all torque limiters take their data from and therefore
+needs to be \enquote{fooled} if you are running 400nm+ or an automatic!)
+Data-matrix for nominal Airmass. Engine speed and torque are used as support points. The value in
+the matrix + friction Airmass (idle Airmass) will create the pointed torque at the pointed engine speed.
+Resolution is 1 mg/c.
+
+Finally, we’re all done!
+
+\chapter{Automatic transmission specifics}
+In automatic Trionic 7 cars the TCM (Traction Control Module) sends a torque limit over can to the
+ECU (Trionic). This means – theoretically - you cannot achieve more torque than the torque limit the
+TCM dictates. The only known way around this at present time is to make Trionic THINK it’s not
+making that much torque, so we have to fool the ECU into thinking it is still below the torque limit set
+by the TCM.
+
+There are different TCM limits depending on year, engine type, gearbox etc.
+A MY01-AERO AUT has a 330NM limiter while a 5 speed automatic gearbox has a 350Nm limit.
+To fool the ECU into thinking it is making less torque is to rescale the x-axis for
+TorqueCal.mAirTorqMap which is TorqueCal.M\_EngXSP. The top value in this list must be no
+more than the TCM limit.
+
+In this case the top three rows have been altered to keep the calculated torque below 330Nm.
+
+\begin{table}
+    \centering
+    \begin{tabular}{ccc}
+        400 & -> & 330Nm\\
+        350 &-> &320Nm\\
+        320 &->& 310Nm
+    \end{tabular}
+    \caption{}
+    \label{tab:}
+\end{table}
+\Mfig{TorqueCal}
+
+This means that when requesting 330Nm you will actually get 400, 320 will get you 350 and so on.
+The torque limiters in TorqueCal.M\_EngMaxAutTab must be scaled with this in mind...
+In this case 400Nm between 2780 and 3920rpm. Values in between you need to recalculate, at
+4300rpm the user wanted 390Nm, (400=330, 350=320) means that 322=360, 324=370, 326=380,
+328=390nm
+
+\Mfig{}
+
+If you want to use the same bin in manual cars all manual limiters must be calculated and set
+correctly!
+
+\textbf{NOTE: In Bio power bins TorqueCal.M\_EngMaxE85Tab !}
+
+\chapter{Using the tuning wizard}
+\todo{Emphasize the limitations of tuning wizard}T7Suite incorporates a tuning wizard. This wizard allows you to automatically alter the maps in the
+binary file to get it to a stage I equivalent file. The wizard can be activated by selecting “Tuning” >
+“Easy tune to stage I” from the menu. A dialog will appear in which you can confirm that you want to
+tune the file to stage I. Once you’ve selected this the process will start. After a few seconds a report
+will appear showing all actions taken on your file.
+
+\Mfig{Tuning wizard images}
+
+\chapter{OpenSID values}
+T7Suite incorporates a function to allow visualization of information on the SID (System Information
+Display). This way you can view real-time information without utilizing the Canbus interface. You can
+select the variables you want the SID to display using the SID information selection option in T7Suite.
+
+Also, the software should be opened to be able to view the selected data on the SID. This is done in
+the firmware information screen.
+\Mfig{OpenSID}
+
+Some tips on how to use the SID information option:
+\begin{itemize}
+    \item
+ECMStat.ST\_ActiveAirDem shows the current Airmass limiter
+    \item
+ECMStat.P\_Engine shows calculated engine power (hp)
+    \item
+ECMStat.AirFuelRatio shows calculated AFR
+    \item
+ECMStat.p\_Diff shows boost pressure (manifold – ambient) in 0.1 kPa units
+    \item
+BstKnkProt.MapPointer shows the offset in 0.1 degrees for BstKnk.MaxAirmass (so, the
+ignition offset for knock)
+    \item
+ExhaustCal.ST\_Enable allows you to enable and disable the EGT algorithm. These algorithms
+are based on the stock engine and won’t be properly calibrated for a stage 3+ setup.
+    \item
+KnkDetAdap.KnkCntCyl first 2 bytes show cylinder 1 knock count, next 2 bytes shows cylinder
+2 knock count etc.
+\end{itemize}
+
 \end{document}
