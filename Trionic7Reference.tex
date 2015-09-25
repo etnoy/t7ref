@@ -98,7 +98,7 @@ document will enable you to understand Trionic 7 better and give you hands-on
 information about altering the maps it uses. Prerequisites are minor electronics
 and computer knowledge and of course some understanding of how a turbo charged
 engine works. Throughout the document the T7Suite software will be referenced.
-This software will enable you to really “get into” the Trionic. The T7Suite
+This software will enable you to really \enquote{get into} the Trionic. The T7Suite
 software can be downloaded from the T7Suite website.
 
 \section{Acknowledgements}
@@ -109,15 +109,17 @@ Nilsson, Hook, Hma, Vigge, Mackan, Sandy Rus, JKB, L4staero and Steve Hayes.
 \tableofcontents
 
 \chapter{Hardware}
-The T7 is build around a Motorola MC68332 (CPU32) microcontroller. This is a 32-bit controller that handles the entire motor management including fuel
+The Trionic 7 is built around a Motorola MC68332 (CPU32) microcontroller. This
+is a 32-bit controller that handles the entire motor management including fuel
 injection, ignition timing and boost pressure control. The processor has a vast
-\SI{4}{\mega\byte} (\SI{512}{\kilo\byte}) flash memory for fetching program code and maps. This flash
-memory consisting of a AM29F400BT-90SI (AMD) holds the program memory. There is
-a coprocessor from Philips, a P83C592FHA/019. This is a 8-bit 8051-based
-microcontroller with a CAN (Controller Area Network) module. As the CAN physical
-line driver there is an Intel AN82527 (same family as used in Trionic 5). RAM
-memory is done by two \SI{32}{\kilo\bit} SRAM chips (U62H256S1K). There is also a special
-component that would appear to be a barometric pressure sensor.
+\SI{4}{\mega\byte} (\SI{512}{\kilo\byte}) flash memory for fetching program code
+and maps. This flash memory consisting of a AM29F400BT-90SI (AMD) holds the
+program memory. There is a coprocessor from Philips, a P83C592FHA/019. This is a
+8-bit 8051-based microcontroller with a CAN (Controller Area Network) module. As
+the CAN physical line driver there is an Intel AN82527 (same family as used in
+Trionic 5). RAM memory is done by two \SI{32}{\kilo\bit} SRAM chips
+(U62H256S1K). There is also a special component that would appear to be a
+barometric pressure sensor.
 
 \section{Integrated Circuit List}
 The table below lists almost all integrated circuits on the board. This is just to give you an idea on what to expect.
@@ -204,13 +206,13 @@ hex values: \texttt{0x48, 0xE7, 0x00, 0x3C, 0x24, 0x7C, 0x00, 0xF0, 0x00, 0x00,
     0x2A, 0x7C} and the mask is \texttt{1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
     0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1}.
 
-So, we are searching the binary for a string of bytes beginning with 0x48, 0xE7,
-0x00, 0x3C... Then we mask out the bytes that change from binary to binary. When
+So, we are searching the binary for a string of bytes beginning with \texttt{0x48, 0xE7,
+0x00, 0x3C\ldots}. Then we mask out the bytes that change from binary to binary. When
 we've located this pattern, we know where to start. Now we start primitively
 disassembling the code. We search for byte patterns \texttt{0x48, 0x6D},
 \texttt{0x48, 0x78}, \texttt{0x48, 0x79}, \texttt{0x2A, 0x7C} and \texttt{0xB0,
 0xB9}. The three first patterns reveal addresses and lengths of checksum areas.
-There are 15 checksums areas from which the Misc checksum is calculated. The
+There are 15 checksums areas from which the \texttt{Misc} checksum is calculated. The
 \texttt{0x2A, 0x7C} pattern gives a base address for the \texttt{0x48, 0x6D}
 addresses.
 
@@ -238,36 +240,35 @@ pattern, the original addresses are \texttt{0x00001152}, \texttt{0x000009D0} and
 \texttt{0x1BEE}. At the same time this is the address where to find the \texttt{Area
 70000} checksum.
 
-\subsection{Misc. Checksum}
-The \texttt{Misc} checksum is a sum of the individual checksums calculated from 15 areas. The checksum
-calculation used is the same as with the \texttt{FB} checksum.
-
-\subsection{Area 70000 Checksum}
-Once you have found the length of \texttt{Area 70000}, you can calculate the checksum by using the
-function described in \cref{sec:FBF2Checksum}. The start address is
-\texttt{0x70000}. Notice that your binary
-might not have this area present.
-
-\section{Computing a Checksum}
-The \texttt{FB} checksum shares the same calculation method as Misc and Area
-70000 checksums. It's simply a sum of the bytes from the checksum area. Four
+\section{Computing the Checksums}
+The \texttt{FB} checksum shares the same calculation method as the \texttt{Misc} and \texttt{Area
+70000} checksums. It's simply a sum of the bytes from the checksum area. Four
 bytes are made into a 32 bit value and summed with the next 32-bit value. This
 goes on until there are fewer than 4 bytes left. The last 1, 2 or 3 bytes are
 then individually summed together with the checksum.
 
-\chapter{Firmware}
+The \texttt{Misc} checksum is a sum of the individual checksums calculated from
+15 areas. The checksum calculation used is the same as with the \texttt{FB}
+checksum.
 
+Once you have found the length of \texttt{Area 70000}, you can calculate the
+checksum by using the function described in \cref{sec:FBF2Checksum}. The start
+address is \texttt{0x70000}. Notice that your binary might not have this area
+present.
+
+\chapter{Firmware}\index{Firmware}
 Once you are done with dumping the flash contents and you want to do more than
 only alter variables and maps you can start analyzing the binary. This is a
 difficult task because there are a lot of different firmware versions, stock
 ones – maybe different per MY and tuned ones that differ for every manufacturer
-and stage. In every case the code can be disassembled using a 6833x disassembler
-like the one in IDAPro. There are scripts available to automatically disassemble
-the code and make it more readable by replacing addresses by variable names that
-are extracted from the symboltable inside the binary.
+and stage. In every case the code can be disassembled using a \texttt{6833x}
+disassembler like the one in \texttt{IDA Pro}\index{IDA Pro}. There are scripts
+available to automatically disassemble the code and make it more readable by
+replacing addresses by variable names that are extracted from the symbol
+table\index{Symbol table} inside the binary.
 
 \chapter{Symbol table}
-Each T7 firmware file contains a symbol table describing data structures in the
+Each Trionic 7 firmware file contains a symbol table describing data structures in the
 program. The major problem is that from some point in time SAAB started to
 compress the symbol tables in the binary file. Probably just to save space in
 the flash memory but it has made tuning a little harder. We actually need these
@@ -319,17 +320,18 @@ as in graphical form.
 
 
 \chapter{Maps}
-A lot of maps in the T7 are not only made up of a piece of raw data. It also
+A lot of maps in Trionic 7 are not only made up of a piece of raw data. It also
 includes x-axis and y-axis information. T7Suite will automatically display all
 known axis information when a map is opened. In Trionic 7 most symbols have an
 English name (Trionic 5 has lots of Swedish names) that explains lots about its
 function. Also, the symbols are categorized by name, which makes browsing the
-symbols much easier. All torque calibration symbols start with “TorqueCal.”.
+symbols much easier. All torque calibration symbols start with
+\enquote{TorqueCal.}.
 T7Suite groups all symbols by their respective category by default.
 
 \section{Fuel}
 Fuel calculation in Trionic 7 is based on the Airmass entering the engine. In rough steps this seems to
-be the calculation’s flow:
+be the flow of the calculation:
 
 \begin{figure}[<+htpb+>]
     \centering
@@ -398,7 +400,7 @@ The trick is to set the closed loop part of the map first, the areas that are re
 
 You will need to switch closed loop off and drive around with a wideband in the tailpipe.
 What you want to achieve is an AFR of 14.7 for petrol while driving around under light loads where
-the value is 1.00. What T7 does is calculate the injection time to be say 5ms, if that is not correct it is
+the value is 1.00. What Trionic 7 does is calculate the injection time to be say 5ms, if that is not correct it is
 multiplied by this map. Say you need to enter a value of 1.1 in the map to get correct AFR it will
 change injection time to 5.5ms (5ms*1.1=5.5ms)
 
@@ -425,7 +427,7 @@ area just by a few goes at adjusting the injector constant.
 
 It can be found in InjCorrCal.InjectorConst, the value represents the injectors flow in mg of fuel (not
 capacity or cc's as injectors are normally rated in). The injector constant is a calculation factor used by
-T7 to calculate injection time.
+Trionic 7 to calculate injection time.
 
 Once closed loop area is done the high load area can be mapped. If its too lean just increase the
 values in the relative column relating to what site of the map you are running in. Once your high load
@@ -437,7 +439,7 @@ By going into open loop the o2 sensor is "masked" where the ECU listens to what 
 ignores it, this allows afr's to go beyond 14.7 and injection correction is directly taken from the fuel
 map we just adjusted allowing much enrichment to cool charge etc.
 
-To alter open loop enrichment you can change at what Airmass flow T7 switches to open loop in
+To alter open loop enrichment you can change at what Airmass flow Trionic 7 switches to open loop in
 LambdaCal.MaxLoadNormTab. Also, open loop entry (so, leaving closed loop situation) has a delay
 attached to it. This way, short overruns of the maximum load will not immediately result in leaving
 closed loop. Stock bins often have this set to 2000 milliseconds which seems quite long. If you want
@@ -688,7 +690,7 @@ Identifier & Length & Description \\
 \end{table}
 \Mfig{footer}
 
-\chapter{Tuning with T7}
+\chapter{Tuning Trionic 7}
 \section{Tuning with T7Suite}
 To get the ECU to produce more engine output, several parameters (maps) have to altered. This
 chapter will give you a general idea on what to change – and why – for getting to an approximate
@@ -897,7 +899,12 @@ select the variables you want the SID to display using the SID information selec
 
 Also, the software should be opened to be able to view the selected data on the SID. This is done in
 the firmware information screen.
-\Mfig{OpenSID}
+\begin{figure}[<+htpb+>]
+    \centering
+    \includegraphics[width=.9\linewidth]{sid.png}
+    \caption{SID Information}
+    \label{fig:}
+\end{figure}
 
 Some tips on how to use the SID information option:
 \begin{itemize}
