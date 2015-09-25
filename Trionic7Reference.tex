@@ -48,6 +48,7 @@
 \usepackage{pgfplots}
 \usepackage{rotating}
 \usepackage[section,acronym]{glossaries}
+\usepackage{tablefootnote}
 
 \graphicspath{{./graphics/}}
 \definecolor{theWhite}{gray}{0.9}
@@ -926,7 +927,102 @@ are based on the stock engine and won’t be properly calibrated for a stage 3+ 
 KnkDetAdap.KnkCntCyl first 2 bytes show cylinder 1 knock count, next 2 bytes shows cylinder
 2 knock count etc.
 \end{itemize}
+
+\chapter{CAN bus interface}
+The most common way to interface with the Trionic 7 unit is via the CAN
+bus\index{CAN}.
+
+\section{General information}
+\begin{table}
+    \centering
+    \begin{tabular}{ll}
+        CAN controller & \texttt{ Intel AN825257} \\
+        Communication speed & \SI{615}{\kilo\bit\per\second}
+    \end{tabular}
+    \caption{CAN specifications for Trionic 7}
+    \label{tab:}
+\end{table}
+The most frequently used interface for this is the Lawicel CANUSB
+interface\footnote{www.canusb.com}. This interface can convert CAN signals onto
+you USB port and vice versa. The interface has a USB port on one side – that
+connects to you computer – and an male \texttt{DB9} connector on the other side.
+This side connects to the CAN bus of the Trionic.
+
+The Lawicel interface has the
+following pin out on the DB9 connector.
+\Mfig{DB9}
+
+\Mfig{Desk connection to ecu}
+
+\section{OBD2 socket pinout}
+\todo{Section should be updated with p-bus obd2 information}On some models, the OBDII port enables you to connect to the I bus directly. On
+most models, you need to wire into the P-pus (preferably, because data
+transmission rates are tenfold of that on the Ibus) or into the I-bus
+directly. The P-bus can be found at the pins of the ECU (as described on the
+previous page), the I-bus can be found in a lot of places like the CD
+changer connector in the trunk (other spots are shown in the table below).
+
+\begin{table}
+    \centering
+    \begin{tabular}{ll}
+        Pin number & Description \\
+        \midrule
+        1 & \\
+        2 & J1850 Bus+ \\
+        3 & \\
+        4 & Chassis ground\\
+        5 & Signal ground\\
+        6 & CAN High (J-2284)\tablefootnote{Only on some models}\\
+        7 & ISO 9141-2 K-line\\
+        8 & \\
+        9 & \\
+        10 & J1850 Bus-\\
+        11 & Airbag Controller (?)\\
+        12 & ABS Controller (?)\\
+        13 & \\
+        14 & CAN Low (J-2284)\tablefootnote{Only on some models}\\
+        15 & ISO 9141-2 L-line\\
+        16 & Battery Power
+    \end{tabular}
+    \caption{}
+    \label{tab:}
+\end{table}
+
+\section{Saab I-bus communication}
+Courtesy of Tomili and General Failure
+
+The I-Bus is an internal bus (Instrumentation Bus) that connects together instruments such as the
+radio, ACC and the SID (Information Display). The I-bus is the non-critical bus which means that
+vehicle critical information is not sent over it. That is done through the P (powertrain) bus.
+The I-bus enables us to communicate with several devices in the car including the TWICE, DICE etc.
+Both the I and the P bus are CAN bus based communication buses which enables us to use a normal
+CAN adapter to interface with them.
+
+The I bus follows the ISO 11898-2 standard which is the high speed variant, although it only
+implements a maximum communication speed of 47,619 Kbit/s. Messages on a CAN bus are sent
+within CAN frames that include an identifier number, number of data bytes, the actual data (called the
+payload) and checksum (to verify it the data was transferred correctly). There are two CAN frame
+formats: the basic frame (referred to as CAN2.0A) and the extended frame (referred to as CAN2.0B).
+The basic frame has a 11-bit identifier field, when the extended frame has a 29-bit identifier which
+makes it possible to extend the number of message types that can be sent over the bus.
+The I bus uses two signal (just like any other CAN bus connection) which are called I+ and I-. These
+refer to CAN High and CAN Low signals in general CAN terminology.
+Details on I bus communication:
+
+Frame type: CAN 2.0A (11-bit identifiers)
+Bus speed: 47,619 Kbit/s
+Timing register settings: BTR0 0xCB, BTR1 0x9A
+
+As an example the engine speed is located as a 16-bit integer value on message ID 460h
+(hexadecimal) in the second and third bytes (I define first byte as the most significant byte). Speed is
+in the same message in fourth and fifth bytes. The speed value is multiplied by ten, so you have to
+divide the 16-bit integer by 10 to get the real speed value.
+Here's an example ID 460h message: 00 03 9C 00 2A 00 00 00
+Engine rpm is 039Ch (hexadecimal format) = 924 (decimal format) = 942 RPM
+Speed is 002Ah = 42 = 4,2 km/h
+
 \appendix
 \printindex
+
 
 \end{document}
