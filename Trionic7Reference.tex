@@ -1026,6 +1026,29 @@ divide the 16-bit integer by 10 to get the real speed value.
 Here's an example ID 460h message: 00 03 9C 00 2A 00 00 00
 Engine rpm is 039Ch (hexadecimal format) = 924 (decimal format) = 942 RPM
 Speed is 002Ah = 42 = 4,2 km/h
+\todo{Finish I-bus and P-bus section}
+
+\chapter{General tuning advice}
+This chapter will describe some frequently made mistakes in handling the Trionic.
+\begin{description}
+    \item[Ignition advance]
+        When altering the ignition tables keep in mind that more than 35 degree advance from TDC is not good.
+    \item[Ignition retard]
+        When altering the ignition tables keep in mind that more than 5 degreen retarding from TDC is not good.
+    \item[Ignition advance at WOT] Try to keep the ignition advance at
+        approximately 10 degrees BTDC
+    \item[Recommended AFR] Try to keep the AFR between 10.8 and 12.5 at WOT.
+    \item[Recommended EGT] Try to keep the exhaust gas temperature below 950
+        degrees C.
+    \item[Determining the maximum boost request for a given turbo] Check that the boost request level fits somehow to compressor map:
+        http://www.squirrelpf.com/turbocalc/index.php
+        In addition you can read appendix IV\todo{Internal link}.
+    \item[Recommended maximum intake air temperature] Up to
+        \SI{60}{\celsius} is good enough. If temperatures rise above
+        \SI{60}{\celsius} consider replacing your stock
+        intercooler with an aluminium, cross-flow type. These are available from Speedparts, Abbott, ETS and
+        others.
+\end{description}
 
 \appendix
 \printindex
