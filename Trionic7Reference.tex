@@ -30,7 +30,7 @@
 \usepackage{verbatim}
 \usepackage{todonotes}
 \usepackage{subcaption}
-\usepackage{ntheorem}
+\usepackage[standard]{ntheorem}
 \usepackage{paralist}
 \usepackage[noabbrev]{cleveref}
 \usepackage{braket}
@@ -48,8 +48,13 @@
 \usepackage{pgfplots}
 \usepackage{rotating}
 \usepackage[section,acronym]{glossaries}
+\usepackage[style=numeric-comp,url=false,backend=biber,%
+    firstinits=true,sorting=none,sortfirstinits=true,clearlang=true,%
+    maxnames=3,minnames=1,uniquename=false,%
+    maxbibnames=10
+]{biblatex}
 \usepackage{tablefootnote}
-
+\addbibresource{references.bib}
 \graphicspath{{./graphics/}}
 \definecolor{theWhite}{gray}{0.9}
 \definecolor{theBlack}{gray}{0.2}
@@ -65,6 +70,18 @@
     listing only,
     listing options={language={bash},aboveskip=0pt,belowskip=0pt,nolol,
     basicstyle=\ttfamily\bfseries,extendedchars=true},
+    enhanced,
+    breakable,
+    lines before break=4,
+    listing file={#2},
+    arc=8pt,
+    #1
+}
+
+\newtcbinputlisting[]{\tcbexample}[2][]{%
+    oversize,
+    colframe=green!50!white,
+    text only,
     enhanced,
     breakable,
     lines before break=4,
@@ -102,10 +119,6 @@ engine works. Throughout the document the T7Suite software will be referenced.
 This software will enable you to really \enquote{get into} the Trionic. The T7Suite
 software can be downloaded from the T7Suite website.
 
-\section{Acknowledgements}
-The author would like to thank everyone on ecuproject for their help on getting
-all this information together. Special thanks go out to General Failure, J.K.
-Nilsson, Hook, Hma, Vigge, Mackan, Sandy Rus, JKB, L4staero and Steve Hayes.
 
 \tableofcontents
 
@@ -1050,8 +1063,184 @@ This chapter will describe some frequently made mistakes in handling the Trionic
         others.
 \end{description}
 
+\chapter{Acknowledgements}
+The author would like to thank everyone on ecuproject for their help on getting
+all this information together. Special thanks go out to General Failure, J.K.
+Nilsson, Hook, Hma, Vigge, Mackan, Sandy Rus, JKB, L4staero and Steve Hayes.
+
+The sections with technical information on checksums and Saab CAN bus were originally
+written by Tomi and General Failure.
+
+
+
 \appendix
+\chapter{BDM Technical Information}
+BDM stands for Background Debug Mode. This refers to the mode the Motorola microcontroller is
+forced into when activating the BDM interface. This mode enables us to hold the processor in the
+program execution and read and write data from and to the memory inside the microcontroller and
+the memory connected to it. In this way we can download and program the flash contents which gives
+us access to the binaries we like so much! The BDM software you need can be downloaded from
+http://www.xendus.se/bdm/bd32-122.zip.
+
+\section{Home build 2 chips design schema}
+An alternative to buying a BDM interface can be building one yourself. This chapter will hand you all
+information needed to buy the components needed and the schema to build the interface. The image
+below shows the schema for the 2 chip design. There is also a 5 chip design and a GAL based design
+but these are more difficult to build at home.
+
+\Mfig{bdm-adapter}
+
+\Cref{tab:bdm-part-list} lists the components you need to build the BDM interface. Of course a soldering
+iron, PCB etc. are things that you also need.
+
+\begin{table}
+    \centering
+    \begin{tabular}{lll}
+Component & Amount & Description \\
+\midrule
+74HC74 & 1 & Dual JK Flip-Flop with Set and Reset \\
+74HC132 & 1&  Quad 2-input NAND Schmitt Trigger \\
+Capacitor &0.1 uF& 1 \\
+Capacitor &0.001 uF& 1 \\
+Resistor &10 kohm & 1 \\
+LPT cable + connector &1 meter& Smart is to get PCB type with normal LPT cable.
+\\
+10 wire flat cable &20 cm  & \\
+10 pin female header for flat cable & 1
+    \end{tabular}
+    \caption{DIY BDM interface part list}
+    \label{tab:bdm-part-list}
+\end{table}
+
+\section{BDM Pinout}
+\begin{table}
+    \centering
+    \begin{tabular}{lll}
+Pin &  Name &  Description  \\
+\midrule
+1 &DS & Data strobe from target MCU. Not used
+in current interface circuitry \\
+2 &BERR &
+Bus error input to target. Allows
+development system to force bus error
+when target MCU accesses invalid
+memory \\
+3 &VSS & Ground reference from target \\
+4 &BKPT/DSCLK &
+Breakpoint input to target in normal
+mode; development serial clock in
+BDM. Must be held low on rising edge
+of reset to enable BDM \\
+5 &VSS & Ground reference from target \\
+6 &FREEZE & Freeze signal from target. High level
+indicates that target is in BDM \\
+7 &RESET & Reset signal to/from target. Must be
+held low to force hardware reset \\
+8 &IFETCH/DSI &
+Used to track instruction pipe in normal
+mode. Serial data input to target MCU
+in BDM \\
+9 &VCC &
++5V supply from target.BDM interface
+circuit draws power from this supply
+and also monitors 'target powered/not
+powered' status \\
+10 &IPIPE/DSO &
+Tracks instruction pipe in normal mode.
+Serial data output from target MCU in
+BDM
+    \end{tabular}
+    \caption{}
+    \label{tab:}
+\end{table}
+
+\chapter{Turbo compressor maps}
+Each turbo has its own characteristics. These are determined by the size of the turbine housing, the
+size of the compressor wheel, the size of the turbine blades and many more parameters.
+The most important identification of a turbocharger is by its compressor map. This is a graphical
+representation of its efficiency. In SAAB Trionic 5 cars there are 2 commonly used turbo chargers: the
+Garrett T25 for B204E, B204S, B204L, B234E and B234L engines and the Mitsubishi TD04-HL-15G/T
+(6cm2) for the B234R engines.
+
+\url{http://www.automotivearticles.com/Turbo_Selection.shtml}
+
+Things to know (taken from \cite{GarrettTerminology}):
+\begin{itemize}
+    \item Compressor and turbine wheels. The turbine wheel is the vaned wheel
+        that is in the exhaust gases from the engine. It is propelled by the
+        exhaust gases themselves. The turbine wheel is connected to the
+        compressor wheel by an axle. So, the compressor wheel will spin together
+        with the turbine wheel. The compressor wheel also is vaned and these
+        vanes compress the air and force it into the intercooler.
+    \item Wheel “trim”. Trim is an area ratio used to describe both turbine and
+        compressor wheels. Trim is calculated using the inducer and exducer
+        diameters. As trim is increased, the wheel can support more air/gas flow.
+    \item Compressor and turbine housing A/R. A/R describes a geometric property of
+        all compressor and turbine housings. Increasing compressor A/R optimizes the
+        performance for low boost applications. Changing turbine A/R has many
+        effects. By going to a larger turbine A/R, the turbo comes up on boost at a
+        higher engine speed, the flow capacity of the turbine is increased and less
+        flow is wastegated, there is less engine backpressure, and engine volumetric
+        efficiency is increased resulting in more overall power.
+    \item Clipping. When an angle is machined on the turbine wheel exducer (outlet
+        side), the wheel is said to be 'clipped'. Clipping causes a minor increase
+        in the wheel's flow capability, however, it dramatically lowers the turbo
+        efficiency. This reduction causes the turbo to come up on boost at a
+        later engine speed (increased turbo lag). High performance applications
+        should never use a clipped turbine wheel. All Garrett GT turbos use
+        modern unclipped wheels.
+    \item CFM = Cubic feet per minute.
+    \item Lbs/minute = pounds (weight) per minute.
+    \item M3/s = cubic meters per second.
+    \item Corrected Airflow. Represents the corrected mass flow rate of air,
+        taking into account air density (ambient temperature and pressure)
+
+        \begin{definition}
+            The corrected airflow $C_{corr}$ is defined as
+            \begin{equation}
+                C_{corr}=C_{air}\frac{13.95}{P}\sqrt{\frac{T_{air} +460}{545}}
+            \end{equation}
+            where \todo{We should only use SI units}$T_{air}$ is the air temperature in Fahrenheit, $P$ the barometric pressure in
+            psi, and $C_{air}$ the
+            engine air consumption in lb/min.
+            \label{def:corrected-airflow}
+        \end{definition}
+        \begin{example}
+            With $T_{air}=60 F$, $P=14.7$ psi and $C_{air}=50$ lb/min we get
+            \begin{equation}
+                C_{corr}=50\frac{13.95}{14.7}\sqrt{\frac{60+460}{545}}=46.3\text{
+                lb/min}
+            \end{equation}
+            \label{ex:corrected-airflow}
+        \end{example}
+    \item Pressure ratio. Ratio of absolute outlet pressure divided by absolute
+        inlet pressure.
+        \begin{definition}
+            The pressure ratio $R_{pressure}$ is defined as
+            \begin{equation}
+                R_{pressure}=\frac{P_{boost}+P_{IC}+P_0}{P_0-P_{AF}}
+            \end{equation}
+            where $P_{boost}$ is the intake manifold pressure
+            (boost\index{Boost}) in psi, $P_{IC}$ is the intercooler pressure
+            drop in psi,
+            $DP_{AF}$ the air filter pressure drop in psi and $P_0$ is the air pressure
+            at sea level in psi.
+            \label{}
+        \end{definition}
+        \begin{example}
+            With $P_{boost}=12$ psi, $P_{IC}=2$ psi, $P_{AF}=0.5$ psi and
+            $P_0=14.7$ psi we get
+            \begin{equation}
+                R_{pressure}=\frac{12+2+14.7}{14.7-0.5}=2.02
+                \label{}
+            \end{equation}
+
+        \end{example}
+\end{itemize}
+
+
 \printindex
 
+\printbibliography
 
 \end{document}
