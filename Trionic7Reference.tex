@@ -48,7 +48,7 @@
 \usepackage{pgfplots}
 \usepackage{rotating}
 \usepackage[section,acronym]{glossaries}
-\usepackage[style=numeric-comp,url=false,backend=biber,%
+\usepackage[style=numeric-comp,backend=biber,%
     firstinits=true,sorting=none,sortfirstinits=true,clearlang=true,%
     maxnames=3,minnames=1,uniquename=false,%
     maxbibnames=10
@@ -1154,17 +1154,18 @@ BDM
     \label{tab:}
 \end{table}
 
-\chapter{Turbo compressor maps}
+\chapter{Understanding turbo compressor maps}
 Each turbo has its own characteristics. These are determined by the size of the turbine housing, the
 size of the compressor wheel, the size of the turbine blades and many more parameters.
 The most important identification of a turbocharger is by its compressor map. This is a graphical
-representation of its efficiency. In SAAB Trionic 5 cars there are 2 commonly used turbo chargers: the
-Garrett T25 for B204E, B204S, B204L, B234E and B234L engines and the Mitsubishi TD04-HL-15G/T
-(6cm2) for the B234R engines.
+representation of its efficiency. In Saab Trionic 7 cars there are two commonly
+used turbo chargers; the
+Garrett GT17 for all models except for B205R and B235R. These latter engines are
+instead equipped with the Mitsubishi TD04-HL-15T (6cm2).
 
-\url{http://www.automotivearticles.com/Turbo_Selection.shtml}
-
-Things to know (taken from \cite{GarrettTerminology}):
+For an introduction to turbocharger terminology and concepts, please
+see~\cite{GarrettTerminology}. For information on basic flow calculation and how
+to choose between turbochargers, see~\cite{TurboSelection}.
 \begin{itemize}
     \item Compressor and turbine wheels. The turbine wheel is the vaned wheel
         that is in the exhaust gases from the engine. It is propelled by the
@@ -1237,7 +1238,140 @@ Things to know (taken from \cite{GarrettTerminology}):
 
         \end{example}
 \end{itemize}
+\section{Reading a compressor map}
+This section contains a short description of reading compressor maps. For a more
+detailed analysis, see
+\citeauthor{isaac-lowry_turbo_2004}~\cite{isaac-lowry_turbo_2004}. A 2-dimensional pressure map looks like this.
+\Mfig{Compressor map}
 
+
+The curved lines indicate the rotation speed (rpm) of the compressor wheel. In the sample map
+above these values are 45050, 69750, 84200 up to 125650 rpm. This is how fast a turbine wheel
+spins!!
+The elliptical circle means the compressor's efficiency area. It's marked by the percent sign.
+The horizontal axis is the amount of air before turbo, (1 m3/s = 2118.88 cfm, 10 lb/min = 144.718
+cfm).
+
+The vertical axis is the pressure ratio, the ratio of air pressure leaving to the turbo to air pressure
+entering the turbo.
+Pressure Ratio=The pressure at compressor exducer vs. the pressure at compressor inducer.
+In another word, the ratio of the pressure of the air after compression vs. the pressure before
+compression. As you can see, the pressure ratio depends on the ambient pressure. For example, at
+sea level, a turbo boosts 14.7psi. Ambient pressure is 14.7psi. That's 2 pressure ratio (PR) on the
+compressor map. Take that turbo to a higher elevation, the ambient pressure is less than 14.7psi. If
+the turbo still boosts 14.7psi, the pressure ratio would be higher. Now on the compressor map, you
+will see by moving up along a vertical line (to pump out the same cfm) and turbo efficiency has
+decreased as the elevation increases (PR increases). Simply put, turbos lose performance and become
+less efficient as elevation gets higher.
+
+\subsection{Choke area}
+The area to the right of the outer most elliptical circle is the least efficient area, the choke area.
+It means when the compressor reaches certain rpm, the air moved by the compressor wheel in the
+diffuser area of the compressor housing is moving at or past the speed of sound. When the air speed
+reach sonic speed, the amount of air flow increase is very small as compressor wheel rpm increases.
+In plain words, the compressor has reached its limit. You can try to pump more psi, have the wheel
+spin faster, but very little more air is pumped out the turbo compressor. You can see now, the
+compressor housing will need to properly match the compressor wheel. If you simply stuff a big wheel
+inside a small compressor housing, the diffuse area will be very small. This causes the air inside the
+housing to move at higher speed. That's why some of the so-called T28s which use a bigger
+compressor wheel inside the stock compressor housing does not produce good hp.
+
+\subsection{Compressor maximum flow}
+The max flow of a compressor is shown on the compressor map. On the map, look for the intersection
+of maximum compressor wheel speed (rpm) and the least compressor efficiency curve. Find that
+intersection. The horizontal coordinate is the max flow.
+The area to the right of maximum flow is the 'choke area'.
+
+The vertical coordinate is the pressure ratio at which the compressor reaches that maximum flow.
+From this boost level, as the boost increases, very little air flow is increased. For example, if a
+compressor reaches its maximum flow at 2 PR or 1 atm pressure or 14.7psi, higher boost does not
+pump more air into the motor. But higher boost may be needed to increase the manifold pressure for
+the motor to flow more air. A 5 liter motor with this turbo needs 15psi of manifold pressure to flow a
+certain CFM. A 3 liter motor with the same turbo will need much higher manifold pressure to flow the
+same amount of air although that turbo's compressor does not flow more air past 14.7psi.
+
+\subsection{Compressor maximum pressure}
+On the map, find the top-most point on the graph. The vertical coordinate is the max pressure ratio.
+For example, 2.8 pressure ratio at sea level is 1.8 times the atmospheric pressure, 1.8x14.7psi=26.46
+psi. Compressor max pressure is limited by compressor wheel speed. It's physically impossible to
+boost higher than this maximum pressure for one particular turbo. Plus the pressure drop in the
+intercooler system, the actual maximum boost reading from a boost gauge that's plugged into the
+intake manifolds maybe a few psi lower than this maximum pressure.
+
+\subsection{What the compressor map reads}
+Most manufactures rate their turbos at 1 bar (15 psi). That's 2 pressure ratio. On the map, draw a
+horizontal line from 2PR. When the line intersects the right-most elliptical circle, the corresponding
+number on the x-axis is the maximum cfm the turbo can flow at 1 bar.
+Use the TD04-15G's map for example, where the 2 PR line hits the right-most efficiency curve, it
+reads 428cfm as its flow rate at 15psi.
+
+\subsection{Comparing compressor maps}
+Well, compressor maps are really 3-dimensional maps. Any compressor map looks a hill/peak in 3
+dimensions. Our compressor maps look like if you look at the hill directly from above vertically. The
+elliptical lines of elevations are the efficiency curves. Since in theory, we can always boost more and
+decrease turbo efficiency to get more cfm, let’s set the same Pressure Ratio and compare turbos at
+the same efficiency curves.
+
+As a rule of thumb, a large turbo will be better at making a lot of pressure but will spool slower than a
+small turbo. A small turbo will build boost fast but is less capable to make big boost pressure.
+
+\section{Selecting a different turbocharger}
+In order to put in a new turbocharger we first need some
+theory~\cite{isaac-lowry_turbo_2004}.
+\begin{definition}
+    The engine volumetric
+    flow\index{Engine Volumetric Flow} ($H$) in cfm \todo{imperial warning}is defined as
+    \begin{equation}
+        H=\frac{D_{ci}}{1728}\times\frac{n}{2}
+        \label{eqn:volumetric-flow}
+    \end{equation}
+    where $D_{ci}$ is the engine displacement in cubic inches and $n$ is the number
+    of crankshaft revolutions per minute.
+    \label{}
+\end{definition}
+We can then find the airflow in lb/min by computing~\cite{isaac-lowry_turbo_2004}.
+\begin{equation}
+    N=\frac{29PH}{10.73T}
+    \label{eqn:airflow}
+\end{equation}
+where $P$ is the absolute pressure in psi and $T$ is the absolute ambient
+temperature in Rankin.
+
+\Cref{tab:volumetric-flow-rpm,tab:airflow-rpm}The following tables apply to our Saab 2.0 and 2.3 liter engines\todo{must
+convert to metric}.
+\begin{table}
+    \centering
+    \begin{tabular}{lll}
+    RPM & 2.0L & 2.3L \\
+    \midrule
+1000 & 35.3 &40.6 \\
+2000 & 70.6 &81.2  \\
+3000 & 105.9 &121.8 \\
+4000 & 141.3 &162.4 \\
+5000 & 176.6 &203.1 \\
+6000 & 211.9 &243.7 \\
+7000 & 247.2 &284.3
+    \end{tabular}
+    \caption{Engine volumetric flow ($H$) in cfm as given by \cref{eqn:volumetric-flow}
+    for different rpm.}
+    \label{tab:volumetric-flow-rpm}
+\end{table}
+Since the amount of air to be flowed by the turbo is largest when RPM is at its
+top we will take the worst case scenario and get EVF @ 7000 RPM. We have to make
+an assumption on the ambient temperature which we will set at 20C. This is 68
+Fahrenheit which is (460 + 68) = 528 Rankin. Now we can calculate the airflow of
+the engine in lb/min for any given boost level. If we want to draw a line into
+the compressor map for our engines needs we need to calculate the needed airflow
+for several boost levels.
+
+\begin{table}
+    \centering
+    \begin{tabular}{lllll}
+
+    \end{tabular}
+    \caption{}
+    \label{tab:airflow-rpm}
+\end{table}
 
 \printindex
 
