@@ -1366,13 +1366,62 @@ for several boost levels.
 
 \begin{table}
     \centering
-    \begin{tabular}{lllll}
-
+    \begin{tabular}{llllll}
+        Boost (bar) & Boost (psi) & 2.0L lb/min & 2.0L cfm & 2.3L lb/min & 2.3L
+        cfm \\
+        \midrule
+0.2 & 2.9 &3.7& 53.1& 4.2& 61 \\
+0.4 & 5.8 &7.3 &106.1& 8.4& 122 \\
+0.6 & 8.7 &11& 159.2 &12.6 &183 \\
+0.8 & 11.6& 14.7& 212.2 &16.9 &244 \\
+1.0 & 14.5& 18.3& 265.3 &21.1 &305 \\
+1.2 & 17.4& 22& 318.3 &25.3 &366 \\
+1.4 & 20.3& 25.7 &371.4 &29.5 &427 \\
+1.6 & 23.2& 29.3 &424.4 &33.8 & 488
     \end{tabular}
-    \caption{}
+    \caption{Airflow in cfm and lb/min as given by \cref{eqn:airflow}}
     \label{tab:airflow-rpm}
 \end{table}
 
+This all results in 2 simple lines in the compressor map which indicate the maximum flow required
+from the turbo by our engine.
+\Mfig{turbo-lines}
+Now we can clearly see where out engine leaves the compressor map and thus the limit for the
+combination of the two (engine and turbo) lies.
+We also see that – even for the 2.3 litre engine – the TD04 can sustain a much higher boost pressure
+at higher rpms than the T25 can. Even at 1.4 bar boost (pressure ratio = 2.4) the TD04 is within its
+limits and would flow approximately 420 cfm. Would we have done the same with the T25 turbo we
+would most certainly be in the choke area and the turbo would be unable to get us the airflow that we
+required.
+
+For selecting the best wheel trim-housing, see~\cite{isaac-lowry_turbo_2004}.
+
+\section{Conclusion}
+Comparing the two compressor maps for TD04 and T25 (see \cref{chap:turbo-specs}) we can clearly see that the TD04 can flow
+more air at a higher pressure ratio and with a higher efficiency. Given the fact that the turbine blades
+are larger than in the T25, spool up will be a bit slower, but high end power will be much better.
+Upgrading your turbo will affect more than meets the eye. The VE map in the Trionic would probably
+need adjustments because the hardware in the airflow has been changed. This means the volumetric
+efficiency also changes and thus the correction table needs changing too.
+Also, when boost values rise, the intercoolers capacity for air flow comes into play. You must make
+sure that the intercooler is not so restrictive that upgrading the turbo will result in a burst intercooler.
+A high capacity cross flow intercooler would be a good option here.
+And last but not least, upgrading the turbo charger means – that is the goal here – more air flow to
+the cylinders and thus more oxygen to burn. If we upgrade the turbo we need to consider the
+injectors too. If the injectors can’t flow the amount of fuel needed to burn the amount of oxygen
+pushed into the cylinders we would have gained nothing.
+
+\chapter{Specifications of common Saab turbochargers}\label{chap:turbo-specs}
+\todo{Needs the GT17}
+\todo{Import from pdf}
+
+\chapter{More information on Saab engine design}
+A previous version of this document contained information that was copied
+from other published sources without permission. For information on knock and
+misfire detection, see
+\citeauthor{eriksson_closed_1998}~\cite{eriksson_closed_1998}. The section on
+intercoolers can be found in
+\citeauthor{ferozepuria_turbocharger}~\cite{ferozepuria_turbocharger}.
 \printindex
 
 \printbibliography
