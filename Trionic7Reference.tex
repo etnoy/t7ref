@@ -23,8 +23,11 @@
 \usepackage{tcolorbox}
 \tcbuselibrary{listingsutf8,breakable,theorems,skins}
 %The paper size for this thesis is the Swedish format s5
-\usepackage
-[binary-units=true]
+\usepackage[
+    binary-units=true,
+    separate-uncertainty=true,
+    uncertainty-separator={\pm}
+    ]
 {siunitx}
 \usepackage{lmodern}
 \usepackage{verbatim}
@@ -47,6 +50,7 @@
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage{rotating}
+\usepackage[siunitx]{circuitikz}
 \usepackage[section,acronym]{glossaries}
 \usepackage[style=numeric-comp,backend=biber,%
     firstinits=true,sorting=none,sortfirstinits=true,clearlang=true,%
@@ -97,7 +101,7 @@
     \caption{#1}
 \end{figure}}
 
-
+\include{definitions}
 
 \begin{document}
 
@@ -307,11 +311,12 @@ table in the binary we can find flash addresses and lengths in the same sequence
 
 Search binary for string the first sequence of 15 zeros.
 \section{Finding start of address lookup table:}
-Search binary for 20 00 00 00 XX YY 00 F0 where XX YY is the index of the first symbol found in the
-symbollist.
+Search binary for 20 00 00 00 XX YY 00 F0 where XX YY is the index of the first
+symbol found in the symbollist.
 
-To save you the time to lookup all addresses manually the T7Suite application will extract all symbol
-information in one run. Symbol name, flash address and length will be displayed all together.
+To save you the time to lookup all addresses manually the T7Suite application
+will extract all symbol information in one run. Symbol name, flash address and
+length will be displayed all together.
 
 This \todo{link}image (6) will give you an idea of what the symbol table should look like once it has been
 extracted. See \todo{link}appendix I for a complete list of known symbols.
@@ -322,9 +327,9 @@ extracted. See \todo{link}appendix I for a complete list of known symbols.
     \label{fig:}
 \end{figure}
 
-When the user double clicks one of the symbols that has a flash address attached to it, T7Suite will
-display the corresponding symbol in a viewer. This viewer will display the data in table form was well
-as in graphical form.
+When the user double clicks one of the symbols that has a flash address attached
+to it, T7Suite will display the corresponding symbol in a viewer. This viewer
+will display the data in table form was well as in graphical form.
 \begin{figure}[<+htpb+>]
     \centering
     \missingfigure{}
@@ -332,106 +337,116 @@ as in graphical form.
     \label{fig:}
 \end{figure}
 
-
-\chapter{Maps}
+\chapter{Mapping}
 A lot of maps in Trionic 7 are not only made up of a piece of raw data. It also
 includes x-axis and y-axis information. T7Suite will automatically display all
 known axis information when a map is opened. In Trionic 7 most symbols have an
 English name (Trionic 5 has lots of Swedish names) that explains lots about its
 function. Also, the symbols are categorized by name, which makes browsing the
 symbols much easier. All torque calibration symbols start with
-\enquote{TorqueCal.}.
-T7Suite groups all symbols by their respective category by default.
+\enquote{TorqueCal.}. T7Suite groups all symbols by their respective category by
+default.
 
 \section{Fuel}
-Fuel calculation in Trionic 7 is based on the Airmass entering the engine. In rough steps this seems to
-be the flow of the calculation:
+Fuel calculation in Trionic 7 is based on the Airmass entering the engine. In
+rough steps this seems to be the flow of the calculation:
 
-\begin{figure}[<+htpb+>]
-    \centering
-    \includestandalone{fuelcalculation}
-    \caption{Flowchart for fuel calculation}
-    \label{fig:}
-\end{figure}
-
-\begin{description}
-    \item[Basic calculation of fuel quantity per combustion] The current air mass/combustion is divided by 14.7
-        and sent to box 2. The unit is now in mg
-        fuel/combustion
-    \item[Compensation] In case of a cold engine, shortly after starting, rapid
-        load changes, knocking or high loads, the current
-        value is multiplied by a compensation factor
-    \item [Closed loop] The closed loop value is used as a multiplier. The
-        value is then sent to box 4
-    \item[Correction for purge] Multiply by the value for purge adaptation. The
+\begin{enumerate}
+    \item Basic calculation of fuel quantity per combustion. The air mass per
+        combustion in \si{\milli\gram} is converted to fuel mass in
+        \si{\milli\gram} by dividing by the AFR. This is dependent on fuel type:
+        \begin{equation}
+            \text{mGasoline}=\frac{\text{mAir}}{14.7}, \qquad
+            \text{mE85}=\frac{\text{mAir}}{9.765}
+        \end{equation}
+    \item In case of a cold engine, shortly after starting, rapid load changes,
+        knocking or high loads, the fuel mass is multiplied by a compensation
+        factor.
+    \item The closed loop value is used as a multiplier.
+    \item Correction for purge. Multiply by the value for purge adaptation. The
         value is sent to box 5
-    \item[Multiplicative adaptation (long term fuel trim)] The multiplicative adaptation value is used as a
-        multiplier and the new value is sent to box 6
-    \item[Additive adaptation] The additive adaptation value is added and the new
-        value is sent to box 7
-    \item[Starting fuel quantity] If the engine has not yet started, starting fuel is
-        selected. The value is sent to box 8
-    \item[Fuel quantity per combustion to be injected] The fuel quantity per combustion is the amount of
-        petrol to be supplied to the engine. The value is sent
-        to box 9
-    \item[Injector opening duration] Converts the value to the time during which the
-        injector must be open and the new value is sent to
-        box 10
-    \item[Injection twice per combustion] Injection takes place twice per combustion until the
+    \item Long term fuel trim. The fuel mass is multiplied by the multiplicative
+        adaptation value.
+    \item Additive adaptation. The additive adaptation value is added to the
+        fuel mass.
+    \item Starting fuel quantity. If the engine has not yet started, starting fuel is
+        selected.
+    \item The fuel quantity per combustion is the amount of petrol to be
+        supplied to the engine.
+    \item Computation of injector opening duration. Converts fuel mass to
+        opening time from a lookup table.
+    \item Injection takes place twice per combustion until the
         camshaft position has been found. Injection duration
-        is divided by two. The value is sent to box 11
-    \item[Voltage dependant needle lift duration added
-        (battery correction)]
-        Adds the injector time delay, which is voltage
-        dependant. The value is sent to box 12
-    \item[ Fuel cut] The value is sent to box 13 unless fuel cut is active
-    \item[ Activation of injector] At a DETERMINED crank shaft angle, the
-        microprocessor will control the transistor for the
-        injector that is next in the firing order
-\end{description}
-The basic fuel quantity is calculated based on Airmass and Injector constant. This injector constant is
-called InjCorrCal.InjectorConstant.
+        is divided by two.
+    \item Battery voltage correction. Injector opening duration is corrected
+        by a voltage-dependent factor that is added to the duration.
+    \item If fuel cut is active, the computed injector duration is replaced by a
+        fuel cut value.
+\end{enumerate}
+After this computation, the current injector is opened for the computed duration
+of time at a determined crank shaft angle. We will now look at the maps that
+control the above computation.
+
+The basic fuel quantity is calculated based on air mass (measured from the air
+mass flow sensor) and injector constant
+(map \texttt{InjCorrCal.InjectorConstant\index{InjCorrCal.InjectorConstant}}).
 \begin{figure}[<+htpb+>]
     \centering
-    \missingfigure{}
-    \caption{}
-    \label{fig:}
+    \includegraphics[width=.9\linewidth]{injectorconstant.png}
+    \caption{InjCorrCal.InjectorConstant}
+    \label{fig:injectorconstant}
 \end{figure}
-If the engine is not warmed up yet, an alternate fuel map is used called BFuelCal.StartMap. If the
-engine has reached operating temperature the normal map “BfuelCal.Map” is used.
+If the engine has reached operating temperature, the standard map
+\texttt{BFuelCal.Map} is used. If not, the map is switched out for the cold
+start map \texttt{BFuelCal.StartMap}.
 \begin{figure}[<+htpb+>]
     \centering
-    \missingfigure{}
-    \caption{}
-    \label{fig:}
+    \includegraphics[width=.9\linewidth]{startmap.png}
+    \caption{BFuelCal.StartMap}
+    \label{fig:startmap}
+\end{figure}
+\begin{figure}[<+htpb+>]
+    \centering
+    \includegraphics[width=.9\linewidth]{fuelmap.png}
+    \caption{BFuelCal.FuelMap}
+    \label{fig:fuelmap}
 \end{figure}
 
+The areas calibrated to be run in closed loop have a value of
+approximately \num{1.00(2)}. Note that the high load part
+of the maps ramp up to enrich the mixture. Therefore, adjust the closed loop
+part of the map first.
 
-You will see the areas calibrated to be run in closed loop have a value of around 1.00. It can be .98-
-1.02 or so. Then you will notice the high load part of the maps ramp up to enrich the mixture.
-The trick is to set the closed loop part of the map first, the areas that are represented by values of
-1.00.
+To do this, turn closed loop mode off and drive around with a wideband lambda
+sensor in the
+tailpipe. What you want to achieve is a measured AFR of 14.7 (gasoline) or 9.765 (E85) while driving
+around under light loads (where the value is close to 1). What Trionic 7 then
+does is to compute an injector duration. If the measured AFR does not achieve
+the correct value, the map must be altered. For example, if Trionic 7 computes a
+duration of \SI{5}{\milli\second}, a map value of \num{1.1} results in a
+duration of $5*1.1=$\SI{5.5}{\milli\second} which means more fuel and a richer
+mixture. Conversely, a value below \num{1.1} results in a leaner mixture.
 
-You will need to switch closed loop off and drive around with a wideband in the tailpipe.
-What you want to achieve is an AFR of 14.7 for petrol while driving around under light loads where
-the value is 1.00. What Trionic 7 does is calculate the injection time to be say 5ms, if that is not correct it is
-multiplied by this map. Say you need to enter a value of 1.1 in the map to get correct AFR it will
-change injection time to 5.5ms (5ms*1.1=5.5ms)
+The idea is to get the closed loop area correct first. This will stop any
+negative adaption once the tune is finished and allowed to run in closed loop
+again. If the closed loop area of your fuel map is too rich it will negatively
+adapt over a long period of time. This will have the effect of leaning your
+air-fuel ratios across the board.
 
-The idea is to get closed loop area correct first. This will stop any negative adaption once the tune is
-finished and allowed to run in closed loop again. If the closed loop area of your fuel map is too rich it
-will negatively adapt over a long period of time. This will have the effect of leaning your AFR's across
-the board.
+For example, let's look at a tune with an AFR that is correct in closed loop.
+This means that the feedback from the $\textrm O_2$ sensor is enough to
+correct the combustion. This can hide a condition where the mixture is too rich
+by \SI{13}{\percent} and the $\mathrm O_2$ sensor reduces the fuel mass by
+\SI{13}{\percent}. Then, when full power is applied, Trionic 7 enters open loop
+mode and the wideband lambda sensor measures an AFR of \num{12.5}.
 
-Example: you make a tune, closed loop AFR's are fine (because the O2 is making it fine through
-feedback) but unknown to you its rich and short term fuel trim is driving negatively 13%. I.e. is
-leaning off injection time by 13\%.
-
-You don’t notice this and make some full power runs to check AFR its fine at say 12.5 AFR.
-After several weeks the multiplicative adaptation (Long term fuel trim) has absorbed some adaption
-and has earned a value of -13\% this will now subtract 13\% from whole fuel calculation including full
-power. All of a sudden your full power AFR has jumped up to 14.0 AFR, \emph{engine failure happens
-very easily from here}.
+If this condition remains, Trionic 7 will adjust the long term fuel trim
+(multiplicative adaption, \texttt{Amul}\index{Amul}) to be \SI{-13}{\percent}
+after a number of weeks. This makes the fuel calculation reduce the fuel
+injection by \SI{13}{\percent} over the whole range, including full power.
+Here's the danger. At the next full power run, there will be \SI{13}{\percent}
+less fuel than ideal, resulting in an AFR of \num{14.0}. The engine now runs
+lean and \emph{can fail very quickly, causing massive internal engine damage}.
 
 Now back to fuel mapping. To set closed loop area of fuel map, monitor the AFR in this light load area
 and if its wrong after adjusting for large injectors, start by just adjusting the Injector constant up and
@@ -554,37 +569,37 @@ Trionic 7 is a torque/Airmass request system instead of a boost request system l
 The basic procedure for the Airmass controller is like in the table below.
 \begin{enumerate}
     \item  Driver request The control module reads pedal potentiometer 1 and converts the
-voltage to Airmass per combustion (mg/c). The value is sent to box 3
-\item Cruise control request When cruise control is active, the air mass per combustion required to
-maintain the set speed is calculated. The value is sent to box 3
-\item Select highest value The control module selects the highest of the two values (box 1 or box
-2). The value is sent to box 5
-\item Engine torque limitation The maximum permissible air mass per combustion varies depending
-on the engine type. During operation, the maximum permissible mg/c
-must also be limited to protect the engine, gearbox, brakes and turbo
-\item Select lowest value The control module selects the lowest value and sends it to box 8
-\item Compensation request When the AC compressor is on, and when the heated rear window or
-radiator fan is on, the mg/c required to compensate for the increased
-load is calculated. The value is sent to box 8
-\item Other air request The control module calculates the mg/c required for idle speed control.
-The value is sent to box 8
-\item Totalling values The control module totals all the values. The total is sent to box 9
-\item Total requested mg/c
-\item Total Airmass request
-\item Throttle control The requested mg/c is converted to requested voltage for throttle
-position sensor 1. The charge air pressure and intake air temp are
-used to correct this conversion. The throttle motor rotates the throttle
-until the current voltage for throttle position sensor 1 corresponds with
-the requested voltage
-\item Current mg/c The requested mg/c is also compared with the current mg/c (MAF
-reading). If needed the requested voltage for throttle position sensor 1
-is finely adjusted
-\item Turbo control If mg/c is too high for throttle alone the turbo control will take over.
-The excess is converted to a PWM which controls the charge air
-control valve. The absolute pressure sensor is used to correct the
-conversion
-\item Current mg/c The requested mg/c is compared to current mg/c and the charge air
-control vale PWM is finely adjusted if required
+        voltage to Airmass per combustion (mg/c). The value is sent to box 3
+    \item Cruise control request When cruise control is active, the air mass per combustion required to
+        maintain the set speed is calculated. The value is sent to box 3
+    \item Select highest value The control module selects the highest of the two values (box 1 or box
+        2). The value is sent to box 5
+    \item Engine torque limitation The maximum permissible air mass per combustion varies depending
+        on the engine type. During operation, the maximum permissible mg/c
+        must also be limited to protect the engine, gearbox, brakes and turbo
+    \item Select lowest value The control module selects the lowest value and sends it to box 8
+    \item Compensation request When the AC compressor is on, and when the heated rear window or
+        radiator fan is on, the mg/c required to compensate for the increased
+        load is calculated. The value is sent to box 8
+    \item Other air request The control module calculates the mg/c required for idle speed control.
+        The value is sent to box 8
+    \item Totalling values The control module totals all the values. The total is sent to box 9
+    \item Total requested mg/c
+    \item Total Airmass request
+    \item Throttle control The requested mg/c is converted to requested voltage for throttle
+        position sensor 1. The charge air pressure and intake air temp are
+        used to correct this conversion. The throttle motor rotates the throttle
+        until the current voltage for throttle position sensor 1 corresponds with
+        the requested voltage
+    \item Current mg/c The requested mg/c is also compared with the current mg/c (MAF
+        reading). If needed the requested voltage for throttle position sensor 1
+        is finely adjusted
+    \item Turbo control If mg/c is too high for throttle alone the turbo control will take over.
+        The excess is converted to a PWM which controls the charge air
+        control valve. The absolute pressure sensor is used to correct the
+        conversion
+    \item Current mg/c The requested mg/c is compared to current mg/c and the charge air
+        control vale PWM is finely adjusted if required
 \end{enumerate}
 
 
@@ -614,10 +629,10 @@ sensors, but with a missing catalyst.
 \begin{table}
     \centering
     \begin{tabular}{lll}
-Map & Value& Description \\
-\midrule
-LambdaCal.ST\_AdapEnable & 0 &Second lambda sensor disabled \\
-LambdaCal.ST\_AdapEnable & 1& Second lambda sensor enabled \\
+        Map & Value& Description \\
+        \midrule
+        LambdaCal.ST\_AdapEnable & 0 &Second lambda sensor disabled \\
+        LambdaCal.ST\_AdapEnable & 1& Second lambda sensor enabled \\
     \end{tabular}
     \caption{}
     \label{tab:}
@@ -630,14 +645,14 @@ CatDiagCal.LoadHi and LoadLo to values never seen normally, like 30 and 20.
 \begin{table}
     \centering
     \begin{tabular}{lll}
-Map & Value & Description \\
-\midrule
-O2HeatPostCal.I\_LowLim& 0& \multirow{3}{*}{Second lambda sensor disabled} \\
-CatDiagCal.LoadLo &20 &\\
-CatDiagCal.LoadHi &30&\\
-O2HeatPostCal.I\_LowLim & 230 & \multirow{3}{*}{Second lambda sensor enabled}\\
-CatDiagCal.LoadLo &140 &\\
-CatDiagCal.LoadHi &425 &\\
+        Map & Value & Description \\
+        \midrule
+        O2HeatPostCal.I\_LowLim& 0& \multirow{3}{*}{Second lambda sensor disabled} \\
+        CatDiagCal.LoadLo &20 &\\
+        CatDiagCal.LoadHi &30&\\
+        O2HeatPostCal.I\_LowLim & 230 & \multirow{3}{*}{Second lambda sensor enabled}\\
+        CatDiagCal.LoadLo &140 &\\
+        CatDiagCal.LoadHi &425 &\\
     \end{tabular}
     \caption{}
     \label{tab:}
@@ -679,32 +694,32 @@ of these strings contains an identifier. These identifiers have a hardcoded mean
 \begin{table}
     \centering
     \begin{tabular}{lll}
-Identifier & Length & Description \\
-\midrule
-0x91& 0x09& Ecuid.vehicleidnr \\
-0x94 & 0x07 & Ecuid.ecuhardwversnr \\
-0x95 & 0x0C & Ecuid.ecusoftwnr \\
-0x97 & 0x1E & Ecuid.ecusoftwversnr \\
-0x9A & 0x04 & Ecuid.softwaredate \\
-0x9C & 0x04 & variable name table crc (not really sure) \\
-0x9B & 0x04 & Symboltable (packed table with symbol names) \\
-0xF2 & 0x04 & F2 checksum \\
-0xFB & 0x04 & Romchecksum.piareachecksum \\
-0xFC & 0x04 & Romchecksum.BottomOffFlash \\
-0xFD & 0x04 & RomChecksumType \\
-0xFE & 0x04 & Romchecksum.TopOffFlash \\
-0xFA & 0x05 & Lastmodifiedby \\
-0x92 & 0x0F & Ecuid.partnralphacode (IMMO) \\
-0x93 & 0x07 & Ecuid.ecuhardwnr \\
-0xF8 & 0x02 & ? \\
-0xF7 & 0x02 & ? \\
-0xF6 & 0x02 & ? \\
-0xF5 & 0x02 & ? \\
-0x90 & 0x11 & Ecuid.scaletable (VIN) \\
-0x99 & 0x06 & Ecuid.testerserialnr \\
-0x98 & 0x0D & Ecuid.enginetype \\
-0xF9 & 0x01 & Romchecksum.Error
-\end{tabular}
+        Identifier & Length & Description \\
+        \midrule
+        0x91& 0x09& Ecuid.vehicleidnr \\
+        0x94 & 0x07 & Ecuid.ecuhardwversnr \\
+        0x95 & 0x0C & Ecuid.ecusoftwnr \\
+        0x97 & 0x1E & Ecuid.ecusoftwversnr \\
+        0x9A & 0x04 & Ecuid.softwaredate \\
+        0x9C & 0x04 & variable name table crc (not really sure) \\
+        0x9B & 0x04 & Symboltable (packed table with symbol names) \\
+        0xF2 & 0x04 & F2 checksum \\
+        0xFB & 0x04 & Romchecksum.piareachecksum \\
+        0xFC & 0x04 & Romchecksum.BottomOffFlash \\
+        0xFD & 0x04 & RomChecksumType \\
+        0xFE & 0x04 & Romchecksum.TopOffFlash \\
+        0xFA & 0x05 & Lastmodifiedby \\
+        0x92 & 0x0F & Ecuid.partnralphacode (IMMO) \\
+        0x93 & 0x07 & Ecuid.ecuhardwnr \\
+        0xF8 & 0x02 & ? \\
+        0xF7 & 0x02 & ? \\
+        0xF6 & 0x02 & ? \\
+        0xF5 & 0x02 & ? \\
+        0x90 & 0x11 & Ecuid.scaletable (VIN) \\
+        0x99 & 0x06 & Ecuid.testerserialnr \\
+        0x98 & 0x0D & Ecuid.enginetype \\
+        0xF9 & 0x01 & Romchecksum.Error
+    \end{tabular}
     \caption{}
     \label{tab:}
 \end{table}
@@ -929,22 +944,22 @@ the firmware information screen.
 Some tips on how to use the SID information option:
 \begin{itemize}
     \item
-ECMStat.ST\_ActiveAirDem shows the current Airmass limiter
+        ECMStat.ST\_ActiveAirDem shows the current Airmass limiter
     \item
-ECMStat.P\_Engine shows calculated engine power (hp)
+        ECMStat.P\_Engine shows calculated engine power (hp)
     \item
-ECMStat.AirFuelRatio shows calculated AFR
+        ECMStat.AirFuelRatio shows calculated AFR
     \item
-ECMStat.p\_Diff shows boost pressure (manifold – ambient) in 0.1 kPa units
+        ECMStat.p\_Diff shows boost pressure (manifold – ambient) in 0.1 kPa units
     \item
-BstKnkProt.MapPointer shows the offset in 0.1 degrees for BstKnk.MaxAirmass (so, the
-ignition offset for knock)
+        BstKnkProt.MapPointer shows the offset in 0.1 degrees for BstKnk.MaxAirmass (so, the
+        ignition offset for knock)
     \item
-ExhaustCal.ST\_Enable allows you to enable and disable the EGT algorithm. These algorithms
-are based on the stock engine and won’t be properly calibrated for a stage 3+ setup.
+        ExhaustCal.ST\_Enable allows you to enable and disable the EGT algorithm. These algorithms
+        are based on the stock engine and won’t be properly calibrated for a stage 3+ setup.
     \item
-KnkDetAdap.KnkCntCyl first 2 bytes show cylinder 1 knock count, next 2 bytes shows cylinder
-2 knock count etc.
+        KnkDetAdap.KnkCntCyl first 2 bytes show cylinder 1 knock count, next 2 bytes shows cylinder
+        2 knock count etc.
 \end{itemize}
 
 \chapter{CAN bus interface}
@@ -1096,17 +1111,17 @@ iron, PCB etc. are things that you also need.
 \begin{table}
     \centering
     \begin{tabular}{lll}
-Component & Amount & Description \\
-\midrule
-74HC74 & 1 & Dual JK Flip-Flop with Set and Reset \\
-74HC132 & 1&  Quad 2-input NAND Schmitt Trigger \\
-Capacitor &0.1 uF& 1 \\
-Capacitor &0.001 uF& 1 \\
-Resistor &10 kohm & 1 \\
-LPT cable + connector &1 meter& Smart is to get PCB type with normal LPT cable.
-\\
-10 wire flat cable &20 cm  & \\
-10 pin female header for flat cable & 1
+        Component & Amount & Description \\
+        \midrule
+        74HC74 & 1 & Dual JK Flip-Flop with Set and Reset \\
+        74HC132 & 1&  Quad 2-input NAND Schmitt Trigger \\
+        Capacitor &0.1 uF& 1 \\
+        Capacitor &0.001 uF& 1 \\
+        Resistor &10 kohm & 1 \\
+        LPT cable + connector &1 meter& Smart is to get PCB type with normal LPT cable.
+        \\
+        10 wire flat cable &20 cm  & \\
+        10 pin female header for flat cable & 1
     \end{tabular}
     \caption{DIY BDM interface part list}
     \label{tab:bdm-part-list}
@@ -1116,39 +1131,39 @@ LPT cable + connector &1 meter& Smart is to get PCB type with normal LPT cable.
 \begin{table}
     \centering
     \begin{tabular}{lll}
-Pin &  Name &  Description  \\
-\midrule
-1 &DS & Data strobe from target MCU. Not used
-in current interface circuitry \\
-2 &BERR &
-Bus error input to target. Allows
-development system to force bus error
-when target MCU accesses invalid
-memory \\
-3 &VSS & Ground reference from target \\
-4 &BKPT/DSCLK &
-Breakpoint input to target in normal
-mode; development serial clock in
-BDM. Must be held low on rising edge
-of reset to enable BDM \\
-5 &VSS & Ground reference from target \\
-6 &FREEZE & Freeze signal from target. High level
-indicates that target is in BDM \\
-7 &RESET & Reset signal to/from target. Must be
-held low to force hardware reset \\
-8 &IFETCH/DSI &
-Used to track instruction pipe in normal
-mode. Serial data input to target MCU
-in BDM \\
-9 &VCC &
-+5V supply from target.BDM interface
-circuit draws power from this supply
-and also monitors 'target powered/not
-powered' status \\
-10 &IPIPE/DSO &
-Tracks instruction pipe in normal mode.
-Serial data output from target MCU in
-BDM
+        Pin &  Name &  Description  \\
+        \midrule
+        1 &DS & Data strobe from target MCU. Not used
+        in current interface circuitry \\
+        2 &BERR &
+        Bus error input to target. Allows
+        development system to force bus error
+        when target MCU accesses invalid
+        memory \\
+        3 &VSS & Ground reference from target \\
+        4 &BKPT/DSCLK &
+        Breakpoint input to target in normal
+        mode; development serial clock in
+        BDM. Must be held low on rising edge
+        of reset to enable BDM \\
+        5 &VSS & Ground reference from target \\
+        6 &FREEZE & Freeze signal from target. High level
+        indicates that target is in BDM \\
+        7 &RESET & Reset signal to/from target. Must be
+        held low to force hardware reset \\
+        8 &IFETCH/DSI &
+        Used to track instruction pipe in normal
+        mode. Serial data input to target MCU
+        in BDM \\
+        9 &VCC &
+        +5V supply from target.BDM interface
+        circuit draws power from this supply
+        and also monitors 'target powered/not
+        powered' status \\
+        10 &IPIPE/DSO &
+        Tracks instruction pipe in normal mode.
+        Serial data output from target MCU in
+        BDM
     \end{tabular}
     \caption{}
     \label{tab:}
@@ -1342,15 +1357,15 @@ convert to metric}.
 \begin{table}
     \centering
     \begin{tabular}{lll}
-    RPM & 2.0L & 2.3L \\
-    \midrule
-1000 & 35.3 &40.6 \\
-2000 & 70.6 &81.2  \\
-3000 & 105.9 &121.8 \\
-4000 & 141.3 &162.4 \\
-5000 & 176.6 &203.1 \\
-6000 & 211.9 &243.7 \\
-7000 & 247.2 &284.3
+        RPM & 2.0L & 2.3L \\
+        \midrule
+        1000 & 35.3 &40.6 \\
+        2000 & 70.6 &81.2  \\
+        3000 & 105.9 &121.8 \\
+        4000 & 141.3 &162.4 \\
+        5000 & 176.6 &203.1 \\
+        6000 & 211.9 &243.7 \\
+        7000 & 247.2 &284.3
     \end{tabular}
     \caption{Engine volumetric flow ($H$) in cfm as given by \cref{eqn:volumetric-flow}
     for different rpm.}
@@ -1370,14 +1385,14 @@ for several boost levels.
         Boost (bar) & Boost (psi) & 2.0L lb/min & 2.0L cfm & 2.3L lb/min & 2.3L
         cfm \\
         \midrule
-0.2 & 2.9 &3.7& 53.1& 4.2& 61 \\
-0.4 & 5.8 &7.3 &106.1& 8.4& 122 \\
-0.6 & 8.7 &11& 159.2 &12.6 &183 \\
-0.8 & 11.6& 14.7& 212.2 &16.9 &244 \\
-1.0 & 14.5& 18.3& 265.3 &21.1 &305 \\
-1.2 & 17.4& 22& 318.3 &25.3 &366 \\
-1.4 & 20.3& 25.7 &371.4 &29.5 &427 \\
-1.6 & 23.2& 29.3 &424.4 &33.8 & 488
+        0.2 & 2.9 &3.7& 53.1& 4.2& 61 \\
+        0.4 & 5.8 &7.3 &106.1& 8.4& 122 \\
+        0.6 & 8.7 &11& 159.2 &12.6 &183 \\
+        0.8 & 11.6& 14.7& 212.2 &16.9 &244 \\
+        1.0 & 14.5& 18.3& 265.3 &21.1 &305 \\
+        1.2 & 17.4& 22& 318.3 &25.3 &366 \\
+        1.4 & 20.3& 25.7 &371.4 &29.5 &427 \\
+        1.6 & 23.2& 29.3 &424.4 &33.8 & 488
     \end{tabular}
     \caption{Airflow in cfm and lb/min as given by \cref{eqn:airflow}}
     \label{tab:airflow-rpm}

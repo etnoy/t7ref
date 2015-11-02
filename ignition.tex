@@ -1,24 +1,35 @@
 \documentclass[tikz]{standalone}
 \usepackage{tikz}
-\usetikzlibrary{shapes.geometric, arrows}
 \begin{document}
 \tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!30]
 \tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
 \tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=orange!30]
 \tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30]
 \begin{tikzpicture}
-\node (idlenormal) [process] {Idle/normal selection};
+\node (idlenormal) [small] {Select};
 \node (idle) [process, above left= of idlenormal] {Idle};
 \node (normal) [process,above right= of idlenormal] {Normal};
-\node (add1) [process,below=of idlenormal] {$+$};
-\node (catenable) [process,left=of add1] {Enable cat heatup};
+\node (add1) [small,below=of idlenormal] {$+$};
+\node (catenable) [small,left=of add1] {On/off};
 \node (cat) [process,left=of catenable] {Cat heatup};
-\node (add2) [process,below=of add1] {$+$};
+\node (add2) [small,below=of add1] {$+$};
 \node (temp) [process,left=of add2] {Temperature};
-\node (select3) [process,below=of add2] {Startup select};
+\node (select) [small,below=of add2] {Select};
 \node (knock) [process,right=of add2] {Knock detection};
-\node (startup) [process,left=of select3] {Startup ignition};
-\node (activate) [process,below=of select3] {Activate the trigger};
+\node (startup) [process,left=of select] {Startup ignition};
+\node (output) [startstop,below=of select] {Ignition angle};
+
+\draw (idle) [-latex',thick] -- (idlenormal);
+\draw (normal) [-latex',thick] -- (idlenormal);
+\draw (cat) [-latex',thick] -- (catenable);
+\draw (idlenormal) [-latex',thick] -- (add1);
+\draw (add1) [-latex',thick] -- (add2);
+\draw (catenable) [-latex',thick] -- (add1);
+\draw (add2) [-latex',thick] -- (select);
+\draw (temp) [-latex',thick] -- (add2);
+\draw (knock) [-latex',thick] -- (add2);
+\draw (startup) [-latex',thick] -- (select);
+\draw (select) [-latex',thick] -- (output);
 \end{tikzpicture}
 
 \end{document}
