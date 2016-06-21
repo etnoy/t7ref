@@ -66,6 +66,7 @@
 \DeclareSIUnit\combustion{c}
 \DeclareSIUnit\mgc{\milli\gram\per\combustion}
 \DeclareSIUnit{\rpm}{rpm}
+\DeclareSIUnit{\RON}{RON}
 
 %% If the following definition throws an error, you'll need a newer version of your
 % Latex distribution (from at least the second half of 2013)
@@ -113,7 +114,7 @@
 
 \maketitle
 \clearpage
-\listoftodos
+\frontmatter
 \chapter{Introduction}
 This document is intended for Saab fanatics and engineers who want to start
 understanding the Saab Trionic 7 motor management system. It will give as much
@@ -126,9 +127,37 @@ engine works. Throughout the document the T7Suite software will be referenced.
 This software will enable you to really \enquote{get into} the Trionic. The T7Suite
 software can be downloaded from the T7Suite website.
 
+\chapter{Acknowledgements}
+This document is the result of contributions and hard work from many people over
+a long time. Version 1.0 was put together by Dilemma in 2010, and he thanks
+people on ecuproject for all their help. Dilemma gives special thanks go to General
+Failure, J.K. Nilsson, Hook, Hma, Vigge, Mackan, Sandy Rus, JKB, L4staero and
+Steve Hayes. Big thanks to solving the checksum calculation, I-bus information,
+and P-bus information goes to Tomili and General Failure. L4staero contributed
+information on the secondary lambda sensor. Magnus Lirell and David Goncalves
+contributed information to the SID text and automatic transmission Canbus
+message formats. David Concalves contributed information on the SID text
+priority and Audio RDS Canbus message formats.
+
+Beginning in 2015, a rework was started by Jonathan Jogenfors (Etnoy) to typeset
+the information using \LaTeX{} and update the information together with other
+enthusiasts over at TrionicTuning. Special thanks to chriva and many others.
+This project is ongoing and you can check out the current status of the project
+at \url{https://github.com/etnoy/t7ref}.
+
+\chapter{Acknowledgements}
+The author would like to thank everyone on ecuproject for their help on getting
+all this information together.
+
+\listoftodos[Things to be done]
+This chapter tracks the todo list for this document. This includes information
+that is deemed missing, incorrect, unclear, or needs rework. Also, a lot of
+figures and graphs must be manually imported form Dilemma's document, those are
+also listed here.
+
 
 \tableofcontents
-
+\mainmatter
 \chapter{Hardware}
 The Trionic 7 is built around a Motorola MC68332 (CPU32) microcontroller. This
 is a 32-bit controller that handles the entire motor management including fuel
@@ -199,8 +228,7 @@ seem to have all four checksums. And of course there could be more checksums
 that have gone unnoticed. Two of the checksums are in the end of the binary and
 the other two are scattered in the code. The latter ones can be found by using
 pattern searching. Again the calculations are pretty simple, and even the harder
-checksum is easy to implement. Big thanks to solving these things goes to Tomi
-and General Failure.
+checksum is easy to implement.
 
 \section{Checksums}
 First of all, there are four different checksums. They have been given names by
@@ -209,33 +237,32 @@ Tomi\todo{Who is this?}: \texttt{FB}\index{FB checksum} checksum,
 \texttt{Misc} checksum\index{Misc checksum}, and \texttt{Area 70000}
 checksum\index{Area 7000 checksum}.
 
-
 \subsection{FB and F2 checksums}\label{sec:FBF2Checksum}
-The first two checksums, \texttt{FB} and \texttt{F2}, can be found at the end of the binary. This
-end area has been called the file header (footer would be more logical). See
-also \todo{Add reference}chapter Trionic 7 file header. The \texttt{F2} checksum is not
-present in all binaries, so be aware of this. Finding the two other checksums is
-more of a challenge.
+The first two checksums, \texttt{FB} and \texttt{F2}, can be found at the end of
+the binary. This end area has been called the file header (footer would be more
+logical). See also \todo{Add reference}chapter Trionic 7 file header. The
+\texttt{F2} checksum is not present in all binaries, so be aware of this.
+Finding the two other checksums is more of a challenge.
 
 \subsection{Misc checksum}
 The Misc checksum resides inline within the code. It is usually found somewhere
-between \texttt{0x02000} and \texttt{0x05000}. The checksum address can be found by pattern
-searching the bin file using a set of hex values along with mask bits. If a mask
-bit is not set, the corresponding hex value does not have to match. Here are the
-hex values: \texttt{0x48, 0xE7, 0x00, 0x3C, 0x24, 0x7C, 0x00, 0xF0, 0x00, 0x00,
-    0x26, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x28, 0x7C, 0x00, 0xF0, 0x00, 0x00,
-    0x2A, 0x7C} and the mask is \texttt{1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0,
-    0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1}.
+between \texttt{0x02000} and \texttt{0x05000}. The checksum address can be found
+by pattern searching the bin file using a set of hex values along with mask
+bits. If a mask bit is not set, the corresponding hex value does not have to
+match. Here are the hex values: \texttt{0x48, 0xE7, 0x00, 0x3C, 0x24, 0x7C,
+    0x00, 0xF0, 0x00, 0x00, 0x26, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x28, 0x7C,
+    0x00, 0xF0, 0x00, 0x00, 0x2A, 0x7C} and the mask is \texttt{1, 1, 0, 0, 0,
+0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1}.
 
-So, we are searching the binary for a string of bytes beginning with \texttt{0x48, 0xE7,
-0x00, 0x3C\ldots}. Then we mask out the bytes that change from binary to binary. When
-we've located this pattern, we know where to start. Now we start primitively
-disassembling the code. We search for byte patterns \texttt{0x48, 0x6D},
-\texttt{0x48, 0x78}, \texttt{0x48, 0x79}, \texttt{0x2A, 0x7C} and \texttt{0xB0,
-0xB9}. The three first patterns reveal addresses and lengths of checksum areas.
-There are 15 checksums areas from which the \texttt{Misc} checksum is calculated. The
-\texttt{0x2A, 0x7C} pattern gives a base address for the \texttt{0x48, 0x6D}
-addresses.
+So, we are searching the binary for a string of bytes beginning with
+\texttt{0x48, 0xE7, 0x00, 0x3C\ldots}. Then we mask out the bytes that change
+from binary to binary. When we've located this pattern, we know where to start.
+Now we start primitively disassembling the code. We search for byte patterns
+\texttt{0x48, 0x6D}, \texttt{0x48, 0x78}, \texttt{0x48, 0x79}, \texttt{0x2A,
+0x7C} and \texttt{0xB0, 0xB9}. The three first patterns reveal addresses and
+lengths of checksum areas. There are 15 checksums areas from which the
+\texttt{Misc} checksum is calculated. The \texttt{0x2A, 0x7C} pattern gives a
+base address for the \texttt{0x48, 0x6D} addresses.
 
 Bear with me. These \texttt{0x2A, 0x7C} addresses are summed with the base
 address to make the actual address. This way the address is only 2 bytes long.
@@ -262,11 +289,11 @@ pattern, the original addresses are \texttt{0x00001152}, \texttt{0x000009D0} and
 70000} checksum.
 
 \section{Computing the Checksums}
-The \texttt{FB} checksum shares the same calculation method as the \texttt{Misc} and \texttt{Area
-70000} checksums. It's simply a sum of the bytes from the checksum area. Four
-bytes are made into a 32 bit value and summed with the next 32-bit value. This
-goes on until there are fewer than 4 bytes left. The last 1, 2 or 3 bytes are
-then individually summed together with the checksum.
+The \texttt{FB} checksum shares the same calculation method as the \texttt{Misc}
+and \texttt{Area 70000} checksums. It's simply a sum of the bytes from the
+checksum area. Four bytes are made into a 32 bit value and summed with the next
+32-bit value. This goes on until there are fewer than 4 bytes left. The last 1,
+2 or 3 bytes are then individually summed together with the checksum.
 
 The \texttt{Misc} checksum is a sum of the individual checksums calculated from
 15 areas. The checksum calculation used is the same as with the \texttt{FB}
@@ -297,7 +324,6 @@ symbol names because they tell us what a certain memory location means. For
 unpacked binaries these symbols can be extracted together with their
 corresponding memory addresses (ROM and RAM).
 
-
 \begin{figure}[]
     \centering
     \includegraphics{symboltable.png}
@@ -305,10 +331,10 @@ corresponding memory addresses (ROM and RAM).
     \label{fig:}
 \end{figure}
 
-
-While examining the symbol table you can see that the separator is 0x00. In contrast to T5 where
-symbol and SRAM addresses reside in the same table, we now only find the symbol name. In another
-table in the binary we can find flash addresses and lengths in the same sequence as the symboltable.
+While examining the symbol table you can see that the separator is 0x00. In
+contrast to T5 where symbol and SRAM addresses reside in the same table, we now
+only find the symbol name. In another table in the binary we can find flash
+addresses and lengths in the same sequence as the symboltable.
 
 \section{Finding start of symbol table:}
 
@@ -321,8 +347,9 @@ To save you the time to lookup all addresses manually the T7Suite application
 will extract all symbol information in one run. Symbol name, flash address and
 length will be displayed all together.
 
-This \todo{link}image (6) will give you an idea of what the symbol table should look like once it has been
-extracted. See \todo{link}appendix I for a complete list of known symbols.
+This \todo{link}image (6) will give you an idea of what the symbol table should
+look like once it has been extracted. See \todo{link}appendix I for a complete
+list of known symbols.
 \begin{figure}[]
     \centering
     \missingfigure{}
@@ -374,7 +401,7 @@ rough steps this seems to be the flow of the calculation:
         fuel mass.
     \item Starting fuel quantity. If the engine has not yet started, starting fuel is
         selected.
-    \item The fuel quantity per combustion is the amount of petrol to be
+    \item The fuel quantity per combustion is the amount of fuel to be
         supplied to the engine.
     \item Computation of injector opening duration. Converts fuel mass to
         opening time from a lookup table.
@@ -520,13 +547,14 @@ limit, just decrease the time in \texttt{LambdaCal.TimeOpenLoop}.
     \item Selection of ignition timing One of the ignition timing calculation is selected
         depending on which function is active. The value is
         sent to box 6
-    \item Catalytic converter heating timing In order to heat up the catalytic converter as fast as
-        possible after start, the ignition will be retarded.
-        This is a compensation matrix that is added to the
-        value in box 3. The matrix is dependent on load and
+    \item Catalytic converter heating timing In order to heat up the catalytic
+        converter as fast as possible after start, the ignition will be
+        retarded. This is a compensation matrix that is added to the value in
+        box 3. The matrix is dependent on load and
         engine speed
-    \item Engagement of catalytic converter heating timing The function is active when coolant temperature is
-        above -10 degrees Celsius and below +64 degrees
+    \item Engagement of catalytic converter heating timing The function is
+        active when coolant temperature is above -10 degrees Celsius and below
+        +64 degrees
         Celsius
     \item Total The value from box 5 is added to the value of box 3
     \item Compensation The ignition timing is corrected depending on engine
@@ -537,10 +565,10 @@ limit, just decrease the time in \texttt{LambdaCal.TimeOpenLoop}.
     \item Total The compensation angle and knock retardation are
         totalled to give the current ignition timing. The value
         is sent to box 7
-    \item Selection of ignition timing Starting ignition timing is selected when the engine
-        has not been started. The value is sent to box 9
-    \item Starting ignition timing Starting ignition timing is selected when the engine
-        has not yet been started. The value is sent to box 9
+    \item Selection of ignition timing Starting ignition timing is selected when
+        the engine has not been started. The value is sent to box 9
+    \item Starting ignition timing Starting ignition timing is selected when the
+        engine has not yet been started. The value is sent to box 9
     \item Activate relevant trigger At the calculated crankshaft angle, the
         microprocessor controls the transistor for the trigger
         that is next in firing order
@@ -553,21 +581,20 @@ limit, just decrease the time in \texttt{LambdaCal.TimeOpenLoop}.
 \end{figure}
 
 \subsection{DI Cassette}
-The direct ignition (DI) cassette is mounted on the valve cover on top of the spark plugs.
-The DI cassette houses four ignition coils/transformers whose secondary
-coil is directly connected to the spark plugs. The ignition cassette is
-electrically supplied with battery voltage from the main relay (\texttt{B+}) and is
-grounded in an earth point. When the main relay is activated the battery voltage
-is transformed to \SI{400}{\volt} DC which is stored in a capacitor. The
-\SI{400}{\volt}
- voltage is
-connected to one of the poles of the primary coil in the four spark coils.
-Connected to the DI cassette there are four triggering lines (from the
-Trionic ECU, pin 9 (cyl. 1), pin 10 (cyl. 2), pin 11 (cyl. 3) and pin 12 (cyl.
-4)). When the ECU is grounding pin 9, the primary coil for the first cylinder is
-grounded (via the \texttt{B+} intake of the DI cassette) and \SI{400}{\volt} is transformed up to a
-maximum of \SI{40}{\kilo\volt} in the secondary coil for cyl. 1. The same procedure is used
-for controlling the ignition on the rest of the cylinders. \Mfig{DI Cassette}
+The direct ignition (DI) cassette is mounted on the valve cover on top of the
+spark plugs. The DI cassette houses four ignition coils/transformers whose
+secondary coil is directly connected to the spark plugs. The ignition cassette
+is electrically supplied with battery voltage from the main relay (\texttt{B+})
+and is grounded in an earth point. When the main relay is activated the battery
+voltage is transformed to \SI{400}{\volt} DC which is stored in a capacitor. The
+\SI{400}{\volt} voltage is connected to one of the poles of the primary coil in
+the four spark coils. Connected to the DI cassette there are four triggering
+lines (from the Trionic ECU, pin 9 (cyl. 1), pin 10 (cyl. 2), pin 11 (cyl. 3)
+and pin 12 (cyl. 4)). When the ECU is grounding pin 9, the primary coil for the
+first cylinder is grounded (via the \texttt{B+} intake of the DI cassette) and
+\SI{400}{\volt} is transformed up to a maximum of \SI{40}{\kilo\volt} in the
+secondary coil for cyl. 1. The same procedure is used for controlling the
+ignition on the rest of the cylinders. \Mfig{DI Cassette}
 
 \subsection{Idle control}
 \Mfig{idlecontrol}
@@ -578,22 +605,27 @@ IgnNormCal.Map}
 Trionic 7 is a torque/Airmass request system instead of a boost request system like Trionic 5 is.
 The basic procedure for the Airmass controller is like in the table below.
 \begin{enumerate}
-    \item  Driver request The control module reads pedal potentiometer 1 and converts the
-        voltage to Airmass per combustion (\si{\mgc}). The value is sent to box 3
-    \item Cruise control request When cruise control is active, the air mass per combustion required to
-        maintain the set speed is calculated. The value is sent to box 3
-    \item Select highest value The control module selects the highest of the two values (box 1 or box
-        2). The value is sent to box 5
-    \item Engine torque limitation The maximum permissible air mass per combustion varies depending
-        on the engine type. During operation, the maximum permissible \si{\mgc}
-        must also be limited to protect the engine, gearbox, brakes and turbo
-    \item Select lowest value The control module selects the lowest value and sends it to box 8
-    \item Compensation request When the AC compressor is on, and when the heated rear window or
-        radiator fan is on, the \si{\mgc} required to compensate for the increased
-        load is calculated. The value is sent to box 8
-    \item Other air request The control module calculates the \si{\mgc} required for idle speed control.
-        The value is sent to box 8
-    \item Totalling values The control module totals all the values. The total is sent to box 9
+    \item  Driver request The control module reads pedal potentiometer 1 and
+        converts the voltage to Airmass per combustion (\si{\mgc}). The value is
+        sent to box 3
+    \item Cruise control request When cruise control is active, the air mass per
+        combustion required to maintain the set speed is calculated. The value
+        is sent to box 3
+    \item Select highest value The control module selects the highest of the two
+        values (box 1 or box 2). The value is sent to box 5
+    \item Engine torque limitation The maximum permissible air mass per
+        combustion varies depending on the engine type. During operation, the
+        maximum permissible \si{\mgc} must also be limited to protect the
+        engine, gearbox, brakes and turbo
+    \item Select lowest value The control module selects the lowest value and
+        sends it to box 8
+    \item Compensation request When the AC compressor is on, and when the heated
+        rear window or radiator fan is on, the \si{\mgc} required to compensate
+        for the increased load is calculated. The value is sent to box 8
+    \item Other air request The control module calculates the \si{\mgc} required
+        for idle speed control. The value is sent to box 8
+    \item Totalling values The control module totals all the values. The total
+        is sent to box 9
     \item Total requested \si{\mgc}
     \item Total Airmass request
     \item Throttle control The requested \si{\mgc} is converted to requested voltage for throttle
@@ -615,13 +647,15 @@ The basic procedure for the Airmass controller is like in the table below.
 
 
 \subsection{Torque request}
-When the driver (or cruise control for that matter) presses the accelerator pedal
-this is interpreted as a certan airmass request from the system. This value is fetched
-from the \texttt{PedelMapCal.m\_RequestMap} shown below. \Mfig{PedelMapCal.m\_RequestMap}
+When the driver (or cruise control for that matter) presses the accelerator
+pedal this is interpreted as a certan airmass request from the system. This
+value is fetched from the \texttt{PedelMapCal.m\_RequestMap} shown below.
+\Mfig{PedelMapCal.m\_RequestMap}
 
-The table holds Airmass values for each position of the accelerator pedal and each rpm site. Trionic
-now looks up the estimated engine output (torque) based on Airmass and rpm. This is done through
-map \texttt{TorqueCal.M\_NominalMap} as shown next.
+The table holds Airmass values for each position of the accelerator pedal and
+each rpm site. Trionic now looks up the estimated engine output (torque) based
+on Airmass and rpm. This is done through map \texttt{TorqueCal.M\_NominalMap} as
+shown next.
 
 \Mfig{TorqueCal.M\_NominalMap}
 
@@ -630,8 +664,7 @@ In the years Trionic 7 was shipped on cars, several things changed in these cars
 setups. One of the major changes was the introduction of the second lambda
 (oxygen, O2) sensor that is placed after the catalyst to ensure the catalyst is
 working properly. If you want to run software from a double lambda sensor car in
-a single lambda car, you have to make some changes in the settings. This
-information is courtesy of L4staero.
+a single lambda car, you have to make some changes in the settings.
 
 \subsection{Turning off second lambda sensor}
 You can use this procedure in cars having only one lambda sensor and in cars
@@ -681,20 +714,22 @@ changes to the file before we can run in on an earlier car (e.g. switch of the
 
     \begin{itemize}
         \item
-            \texttt{OBDCal.OBD2Enabled} This is self explanatory, if car is OBD2 put value at 1 if it's not OBD2 put value
-at 0.
+            \texttt{OBDCal.OBD2Enabled} This is self explanatory, if car is OBD2
+            put value at 1 if it's not OBD2 put value at 0.
 
-On this point in later bins(compressed) there is EOBDEnable which is always on in EC2000 EU files
-and LOBDEnable which is always on in EC2000 RW files. File type is shown in firmware information
-under engine type.
+On this point in later bins(compressed) there is EOBDEnable which is always on
+in EC2000 EU files and LOBDEnable which is always on in EC2000 RW files. File
+type is shown in firmware information under engine type.
 
-\item \texttt{OBDCal.EnableOBD2Limit} As above but its a 4 byte value. If done in Hex value for a OBD2 car is
-00000001 and for non-OBD2 car is 00000000. As shown in T7suite is 2 values. OBD2 cars top value is
-1 and bottom value is 0. In non OBD2 car both values are 0.
+\item \texttt{OBDCal.EnableOBD2Limit} As above but its a 4 byte value. If done
+    in Hex value for a OBD2 car is 00000001 and for non-OBD2 car is 00000000. As
+    shown in T7suite is 2 values. OBD2 cars top value is 1 and bottom value is
+    0. In non OBD2 car both values are 0.
 
-\item \texttt{OBDCal.evapEquipmentExist} If car is equipped with a canister at rear of tank and a tank pressure
-sensor value will be 1. If neither exist value should be set to 0.
-    \end{itemize}
+\item \texttt{OBDCal.evapEquipmentExist} If car is equipped with a canister at
+rear of tank and a tank pressure sensor value will be 1. If neither exist value
+should be set to 0.
+\end{itemize}
 
 \subsection{Info on LEV (Low Emission Vehicle)}
 For example take a 2001 Saab 9-3 Aero (or SE as called in USA) equipped with a
@@ -744,13 +779,6 @@ identifiers have a hardcoded meaning.
 \end{table}
 \Mfig{footer}
 
-
-
-
-
-
-
-
 \chapter{Tuning Trionic 7}
 \section{Tuning with T7Suite}
 To get the ECU to produce more engine output, several parameters (maps) have to
@@ -797,8 +825,8 @@ Map for max allowed Airmass for automatic gearbox, m\_nHigh. Resolution is \SI{1
 
 
 \subsection{FCutCal.m\_AirInletLimit}
-If the "MAF.m\_AirInletFuel" is higher than this limit during m\_AirInletTime will the fuelcut be activated
-( pressure guard ).
+If the "MAF.m\_AirInletFuel" is higher than this limit during m\_AirInletTime
+will the fuelcut be activated ( pressure guard ).
 \Mfig{AirInletLimit}
 
 \subsection{IgnE85Cal.fi\_AbsMap}
@@ -818,8 +846,8 @@ change with T7suite!)
 Speed limiter.
 
 \subsection{PedalMapCal.m\_RequestMap}
-Requested Airmass from the driver as a function of rpm and accelerator pedal position. Resolution is
-\SI1{\mgc}.
+Requested Airmass from the driver as a function of rpm and accelerator pedal
+position. Resolution is \SI1{\mgc}.
 \Mfig{RequestMap}
 
 \subsection{TorqueCal.M\_ManGearLim}
@@ -827,11 +855,12 @@ Maximum engine torque limit for each gear in the manual gearbox. Resolution is 1
 \Mfig{ManGearLim}
 
 \subsection{TorqueCal.m\_AirTorqMap}
-(This is where all torque limiters take their data from and therefore
-needs to be "fooled" if you are running 400nm+ or an automatic!)
-Data-matrix for nominal Airmass. Engine speed and torque are used as support points. The value in
-the matrix + friction Airmass (idle Airmass) will create the pointed torque at the pointed engine speed.
-Resolution is \SI1{\mgc}. axis to the above map: TorqueCal.m\_AirXSP
+(This is where all torque limiters take their data from and therefore needs to
+be "fooled" if you are running 400nm+ or an automatic!) Data-matrix for nominal
+Airmass. Engine speed and torque are used as support points. The value in the
+matrix + friction Airmass (idle Airmass) will create the pointed torque at the
+pointed engine speed. Resolution is \SI1{\mgc}. axis to the above map:
+TorqueCal.m\_AirXSP
 \Mfig{AirTorqMap}
 
 \subsection{TorqueCal.M\_EngMaxTab}
@@ -842,7 +871,8 @@ Data-table for maximum engine output torque for automatic cars. Resolution is 1 
 \Mfig{EngMaxAutTab}
 
 \subsection{TorqueCal.M\_5GearLimTab}
-Data-table for maximum engine output torque for manual cars on fifth gear. Resolution is 1 Nm.
+Data-table for maximum engine output torque for manual cars on fifth gear.
+Resolution is 1 Nm.
 \Mfig{5GearLimTab}
 
 \subsection{TorqueCal.M\_EngMaxE85Tab} ( if running on E85 )
@@ -892,14 +922,16 @@ provide engine safety.
 
 
 \section{Engine speed limiter}
-To prevent the system to reduce Airmass above engine speeds that are still acceptable we need to
-change \texttt{MaxSpdCal.n\_EngLimAir} as well. Y axis values are engine temperature (coolant). Please note
-that \SI{200}{\rpm} above this limit, the fuel cut mechanism will become active!
+To prevent the system to reduce Airmass above engine speeds that are still
+acceptable we need to change \texttt{MaxSpdCal.n\_EngLimAir} as well. Y axis
+values are engine temperature (coolant). Please note that \SI{200}{\rpm} above
+this limit, the fuel cut mechanism will become active!
 \Mfig{Engine speed limit}
 
 \section{Vehicle speed limiter}
-An option is to increase the vehicle speed limiter as well. In this stock binary the vehicle speed is
-limited to \SI{240}{\kilo\meter\per\hour}. We can change it to – for example
+An option is to increase the vehicle speed limiter as well. In this stock binary
+the vehicle speed is limited to \SI{240}{\kilo\meter\per\hour}. We can change it
+to – for example
 \SI{280}{\kilo\meter\per\hour}.
 
 \Mfig{Vehicle speed limit}
@@ -923,8 +955,8 @@ match the \SI{1350}{\mgc} we are requesting as a maximum.
 
 \Mfig{PedYSP}
 
-The map that uses this axis is called \texttt{TorqueCal.x\_AccPedalMap}. It it shown
-below with the altered axis values for clarification.
+The map that uses this axis is called \texttt{TorqueCal.x\_AccPedalMap}. It it
+shown below with the altered axis values for clarification.
 
 \Mfig{AccPedalMap}
 
@@ -995,8 +1027,8 @@ between you need to recalculate, at 4300rpm the user wanted 390Nm, (400=330,
 
 \Mfig{EngMaxAutTab}
 
-If you want to use the same bin in manual cars all manual limiters must be calculated and set
-correctly!
+If you want to use the same bin in manual cars all manual limiters must be
+calculated and set correctly!
 
 \textbf{NOTE: In Bio power bins TorqueCal.M\_EngMaxE85Tab !}
 \Mfig{columns}
@@ -1006,10 +1038,10 @@ correctly!
 
 T7Suite incorporates a tuning wizard. This wizard allows you to automatically
 alter the maps in the binary file to get it to a stage I equivalent file. The
-wizard can be activated by selecting \texttt{Tuning->Easy tune to stage 1} from the
-menu. A dialog will appear in which you can confirm that you want to tune the
-file to stage I. Once you’ve selected this the process will start. After a few
-seconds a report will appear showing all actions taken on your file.
+wizard can be activated by selecting \texttt{Tuning->Easy tune to stage 1} from
+the menu. A dialog will appear in which you can confirm that you want to tune
+the file to stage I. Once you’ve selected this the process will start. After a
+few seconds a report will appear showing all actions taken on your file.
 
 \Mfig{Tuning wizard images}
 
@@ -1044,11 +1076,12 @@ Some tips on how to use the SID information option:
         \texttt{BstKnk.MaxAirmass} (so, the
         ignition offset for knock)
     \item
-        \texttt{ExhaustCal.ST\_Enable} allows you to enable and disable the EGT algorithm. These algorithms
-        are based on the stock engine and won’t be properly calibrated for a stage 3+ setup.
+        \texttt{ExhaustCal.ST\_Enable} allows you to enable and disable the EGT
+        algorithm. These algorithms are based on the stock engine and won’t be
+        properly calibrated for a stage 3+ setup.
     \item
-        \texttt{KnkDetAdap.KnkCntCyl} first 2 bytes show cylinder 1 knock count, next 2 bytes shows cylinder
-        2 knock count etc.
+        \texttt{KnkDetAdap.KnkCntCyl} first 2 bytes show cylinder 1 knock count,
+        next 2 bytes shows cylinder 2 knock count etc.
 \end{itemize}
 
 \chapter{CAN bus interface}
@@ -1078,12 +1111,13 @@ following pin out on the DB9 connector.
 \Mfig{Desk connection to ecu}
 
 \section{OBD2 socket pinout}
-\todo{Section should be updated with p-bus obd2 information}On some models, the OBDII port enables you to connect to the I bus directly. On
-most models, you need to wire into the P-pus (preferably, because data
-transmission rates are tenfold of that on the Ibus) or into the I-bus
-directly. The P-bus can be found at the pins of the ECU (as described on the
-previous page), the I-bus can be found in a lot of places like the CD
-changer connector in the trunk (other spots are shown in the table below).
+\todo{Section should be updated with p-bus obd2 information}On some models, the
+OBDII port enables you to connect to the I bus directly. On most models, you
+need to wire into the P-pus (preferably, because data transmission rates are
+tenfold of that on the Ibus) or into the I-bus directly. The P-bus can be found
+at the pins of the ECU (as described on the previous page), the I-bus can be
+found in a lot of places like the CD changer connector in the trunk (other spots
+are shown in the table below).
 
 \begin{table}
     \centering
@@ -1203,13 +1237,15 @@ T7Suite has the following features:
 For usage of this tool please refer to its user manual.
 
 \section{BD32}
-BD32.exe is the tool used to interface with the ECU through a BDM interface. It is DOS based and will
-run normally on Win95/98/Me. Ideally the user would boot into a DOS environment to use the tool.
-There is a windows version available but the author has no experience with that specific tool.
+BD32.exe is the tool used to interface with the ECU through a BDM interface. It
+is DOS based and will run normally on Win95/98/Me. Ideally the user would boot
+into a DOS environment to use the tool. There is a windows version available but
+the author has no experience with that specific tool.
 
 \section{IDA Pro}
-IDAPro stands for Interactive DisAssembler Professional. It enables the user to disassemble binary
-files to its original source code. IDAPro is commercial software, not freeware.
+IDAPro stands for Interactive DisAssembler Professional. It enables the user to
+disassemble binary files to its original source code. IDAPro is commercial
+software, not freeware.
 
 Example of how to use IDA Pro with a Trionic 7 box.
 \begin{enumerate}
@@ -1233,23 +1269,11 @@ varies from binary to binary)
 Hexworkshop (or UltraEdit) is a tool that comes in handy often. It can be used to view, search and
 modify the raw binary file.
 
-
-
-\chapter{Acknowledgements}
-The author would like to thank everyone on ecuproject for their help on getting
-all this information together. Special thanks go out to General Failure, J.K.
-Nilsson, Hook, Hma, Vigge, Mackan, Sandy Rus, JKB, L4staero and Steve Hayes.
-
-The sections with technical information on checksums and Saab CAN bus were originally
-written by Tomi and General Failure.
-
-
-
 \appendix
 \chapter{Symbol list}
-This appendix will give a short description of the most important maps in Trionic 7. To give a list of all
-symbols would be kind of stupid because there are approximately 4000 (!!!) symbols in a Trionic 7
-binary.
+This appendix will give a short description of the most important maps in
+Trionic 7. To give a list of all symbols would be kind of stupid because there
+are approximately 4000 (!!!) symbols in a Trionic 7 binary.
 
 \begin{itemize}
     \item
@@ -1261,35 +1285,43 @@ AirCtrlCal.m\_MaxAirE85Ta ( if running on E85 )
 Same as above for E85
     \item
 BoostCal.I\_LimTab
-Load limit tab. to enable the I Part of boost regulator. If the load request from Airmass master is
-above this value plus the hysteresis is the I Part enabled and the throttle closed loop is disabled. If
-the load request from Airmass master is below this value is the I Part disabled and the throttle is
+Load limit tab. to enable the I Part of boost regulator. If the load request
+from Airmass master is above this value plus the hysteresis is the I Part
+enabled and the throttle closed loop is disabled. If the load request from
+Airmass master is below this value is the I Part disabled and the throttle is
 allowed to run in closed loop.
     \item
 BoostCal.P\_LimTab
-Load limit tab. to enable the P Part of boost regulator. If the load request from Airmass master is
-above this value plus the hysteresis is the P Part enabled. If the load request from Airmass master is
-below this value is the P Part disabled.
+Load limit tab. to enable the P Part of boost regulator. If the load request
+from Airmass master is above this value plus the hysteresis is the P Part
+enabled. If the load request from Airmass master is below this value is the P
+Part disabled.
     \item
 BoostCal.RegMap
 Main constant matrix. Resolution is 0.1 %.
     \item
-BstKnkCal.MaxAirmass (divide by 3,1 for approx torque, ignition, airtemp etc affect this!)
-Map for max allowed Airmass for manual gearbox, m\_nHigh. Resolution is 1 mg/c.
-Knock limitation
-Knock control first retards the ignition timing for each cylinder. If the mean value for the ignition
-retardation for all the cylinder exceeds a certain value, fuel enrichment will take place.
-If the mean value for ignition retardation increases further, the maximum permissible air
-mass/combustion will be reduced with the values in the BstKnkCal.MaxAirmass maps. X axis
-represents degree of ignition retard. This reduction takes place continuously as the ignition retardation
-increases. The value constitutes the maximum air mass/combustion value permitted by knock control.
-Note
-Knock control on modern engines is not a safety function but a normal function. Consequently, it is
-considered normal when knock control reduces engine torque in certain cases. The engine knock
-control increases for e.g. high intake air temperatures or high coolant temperatures. Further
-influencing factors are driving at high altitudes and low octane fuel.
-Certain engine variants require petrol with an octane rating of 98 RON in order to provide the
-specified engine torque/power.
+BstKnkCal.MaxAirmass (divide by 3,1 for approx torque, ignition, airtemp etc
+affect this!) Map for max allowed Airmass for manual gearbox, m\_nHigh.
+Resolution is 1 mg/c.
+\end{itemize}
+\section{Knock limitation}
+Knock control first retards the ignition timing for each cylinder. If the mean
+value for the ignition retardation for all the cylinder exceeds a certain value,
+fuel enrichment will take place. If the mean value for ignition retardation
+increases further, the maximum permissible air mass per combustion will be
+reduced with the values in the BstKnkCal.MaxAirmass maps. X axis represents
+degree of ignition retard. This reduction takes place continuously as the
+ignition retardation increases. The value constitutes the maximum air mass per
+combustion value permitted by knock control.
+
+Note: Knock control on modern engines is not a safety function but a normal
+function. Consequently, it is considered normal when knock control reduces
+engine torque in certain cases. The engine knock control increases for e.g. high
+intake air temperatures or high coolant temperatures. Further influencing
+factors are driving at high altitudes and low octane fuel. Certain engine
+variants require fuel with an octane rating of \SI{98}{\RON} in order to provide the
+specified engine torque and power.
+\begin{itemize}
     \item
 BstKnkCal.MaxAirmassAu
 Map for max allowed Airmass for automatic gearbox, m\_nHigh. Resolution is 1 mg/c.
@@ -1325,16 +1357,18 @@ On engine alternative B235E, gear 5 is gradually limited if the engine speed is 
 to avoid vibration.
 On engine alternative B235R, gear 1 is limited to 280 Nm and reverse gear, R, is limited to 230 Nm.
 Torque limitation in gears 2-5 is 380 Nm.
-The engine torque value is converted to mg air/combustion and constitutes the maximum air
-mass/combustion allowed by the gearbox.
+The engine torque value is converted to \si{mgc} and constitutes the maximum air
+mass per combustion allowed by the gearbox.
     \item
-TorqueCal.m\_AirTorqMap This is where all torque limiters take their data from and therefore needs
-to be "fooled" if you are running 400nm+ or an automatic. 4sp automatic need the last row to be max
-330nm, 5sp 350nm, as this is what the gearbox ECU is requesting as a max limit.
-Data-matrix for nominal Airmass. Engine speed and torque are used as support points. The value in
-the matrix + friction Airmass (idle Airmass) will create the pointed torque at the pointed engine speed.
-Resolution is 1 mg/c.
-axis to the above map: TorqueCal.m\_AirXSP
+TorqueCal.m\_AirTorqMap This is where all torque limiters take their data from
+and therefore needs to be "fooled" if you are running more than
+\SI{400}{\newton\meter} or an automatic.
+The four-speed automatic need the last row to be max \SI{330}{\newton\meter},
+five-speed \SI{350}{\newton\meter}, as this is what the gearbox ECU is
+requesting as a max limit. Data-matrix for nominal Airmass. Engine speed and
+torque are used as support points. The value in the matrix + friction Airmass
+(idle Airmass) will create the pointed torque at the pointed engine speed.
+Resolution is 1 mg/c. axis to the above map: TorqueCal.m\_AirXSP
     \item
 TorqueCal.M\_EngMaxTab
 Data-table for maximum engine output torque for manual cars. Resolution is 1 Nm.
@@ -1360,18 +1394,20 @@ speed:
     \label{tab:}
 \end{table}
 TCM then sends maximum permissible engine torque to protect the gearbox.
-Trionic T7 converts Nm to mg air/combustion with help of the Airtorque map. The value constitutes
+Trionic T7 converts \si{\newton\meter} to \si{\mgc} with help of the Airtorque map. The value constitutes
 the maximum air mass/combustion permitted by the automatic transmission and it is therefore we
 currently need to trick T7 to think more Airmass is still the same Nm.
     \item
 TorqueCal.M\_5GearLimTab
-Data-table for maximum engine output torque for manual cars on fifth gear. Resolution is 1 Nm.
+Data-table for maximum engine output torque for manual cars on fifth gear.
+Resolution is \SI{1}{\newton\meter}.
     \item
 TorqueCal.M\_EngMaxE85Tab ( if running on E85 )
-Data-table for maximum engine output torque when running on E85. Resolution is 1 Nm.
+Data-table for maximum engine output torque when running on E85. Resolution is
+\SI{1}{\newton\meter}.
     \item
 TorqueCal.m\_PedYSP
-Air mass support points for (Calc) X\_AccPedalMap. Resolution is 1 mg/combustion.
+Air mass support points for (Calc) X\_AccPedalMap. Resolution is 1 \si{\mgc}.
 \end{itemize}
 
 \chapter{Trionic7 pinout}
@@ -1379,12 +1415,13 @@ Air mass support points for (Calc) X\_AccPedalMap. Resolution is 1 mg/combustion
 
 
 \chapter{BDM Technical Information}
-BDM stands for Background Debug Mode. This refers to the mode the Motorola microcontroller is
-forced into when activating the BDM interface. This mode enables us to hold the processor in the
-program execution and read and write data from and to the memory inside the microcontroller and
-the memory connected to it. In this way we can download and program the flash contents which gives
-us access to the binaries we like so much! The BDM software you need can be downloaded from
-http://www.xendus.se/bdm/bd32-122.zip.
+BDM stands for Background Debug Mode. This refers to the mode the Motorola
+microcontroller is forced into when activating the BDM interface. This mode
+enables us to hold the processor in the program execution and read and write
+data from and to the memory inside the microcontroller and the memory connected
+to it. In this way we can download and program the flash contents which gives us
+access to the binaries we like so much! The BDM software you need can be
+downloaded from http://www.xendus.se/bdm/bd32-122.zip.
 
 \section{Home build 2 chips design schema}
 An alternative to buying a BDM interface can be building one yourself. This chapter will hand you all
