@@ -921,14 +921,28 @@ should support the maximum Airmass we’re requesting in the
 \texttt{TorqueCal.m\_Requestmap}, so in our case we need to modify the map to
 match the \SI{1350}{\mgc} we are requesting as a maximum.
 
+\Mfig{PedYSP}
+
 The map that uses this axis is called \texttt{TorqueCal.x\_AccPedalMap}. It it shown
 below with the altered axis values for clarification.
+
+\Mfig{AccPedalMap}
 
 \section{Torque limiter}
 To prevent to system to reduce Airmass above a certain engine output, the torque
 limiter needs to be increased according to expected engine output.
 
-\Mfig{Torque limiters}
+\Mfig{EngMaxAutTab}
+Torque limiter for E85 fuel
+\Mfig{EngMaxE85Tab}
+Torque limiter for manual gearbox in higher revs
+\Mfig{ManGearLim}
+Torque limiter in 5th gear
+\Mfig{5GearLimTab}
+Overboost table
+\Mfig{Overboost}
+Maximum Airmass for I-part of PID controller (\texttt{AirCtrlCal.m\_MaxAirTab})
+\Mfig{MaxAirTab}
 
 \texttt{TorqueCal.m\_AirTorqMap}. This is where all torque limiters take their
 data from and therefore needs to be \enquote{fooled} if you are running more
@@ -937,23 +951,27 @@ than \SI{400}{\newton\meter} on an automatic!
 Data-matrix for nominal Airmass. Engine speed and torque are used as support
 points. The value in the matrix + friction Airmass (idle Airmass) will create
 the pointed torque at the pointed engine speed. Resolution is \SI1{\mgc}.
+\Mfig{AirTorqMap}
 
 Finally, we’re all done!
 
 \chapter{Automatic transmission specifics}
-In automatic Trionic 7 cars the TCM (Traction Control Module) sends a torque limit over can to the
-ECU (Trionic). This means – theoretically - you cannot achieve more torque than the torque limit the
-TCM dictates. The only known way around this at present time is to make Trionic THINK it’s not
-making that much torque, so we have to fool the ECU into thinking it is still below the torque limit set
-by the TCM.
+In automatic Trionic 7 cars the TCM (Traction Control Module) sends a torque
+limit over can to the ECU (Trionic). This means – theoretically - you cannot
+achieve more torque than the torque limit the TCM dictates. The only known way
+around this at present time is to make Trionic THINK it’s not making that much
+torque, so we have to fool the ECU into thinking it is still below the torque
+limit set by the TCM.
 
-There are different TCM limits depending on year, engine type, gearbox etc.
-A MY01-AERO AUT has a 330NM limiter while a 5 speed automatic gearbox has a 350Nm limit.
-To fool the ECU into thinking it is making less torque is to rescale the x-axis for
-TorqueCal.mAirTorqMap which is TorqueCal.M\_EngXSP. The top value in this list must be no
+There are different TCM limits depending on year, engine type, gearbox etc. A
+MY01-AERO AUT has a \SI{330}{\newton\meter} limiter while a 5 speed automatic
+gearbox has a \SI{350}{\newton\meter} limit. To fool the ECU into thinking it is
+making less torque is to rescale the x-axis for \texttt{TorqueCal.mAirTorqMap}
+which is \texttt{TorqueCal.M\_EngXSP}. The top value in this list must be no
 more than the TCM limit.
 
-In this case the top three rows have been altered to keep the calculated torque below 330Nm.
+In this case the top three rows have been altered to keep the calculated torque
+below \SI{330}{\newton\meter}.
 
 \begin{table}
     \centering
@@ -965,37 +983,44 @@ In this case the top three rows have been altered to keep the calculated torque 
     \caption{}
     \label{tab:}
 \end{table}
-\Mfig{TorqueCal}
+\Mfig{TorqueCal EngXSP}
 
-This means that when requesting 330Nm you will actually get 400, 320 will get you 350 and so on.
-The torque limiters in TorqueCal.M\_EngMaxAutTab must be scaled with this in mind...
-In this case 400Nm between 2780 and 3920rpm. Values in between you need to recalculate, at
-4300rpm the user wanted 390Nm, (400=330, 350=320) means that 322=360, 324=370, 326=380,
-328=390nm
+This means that when requesting \SI{330}{\newton\meter} you will actually get
+\SI{400}{\newton\meter}, \SI{320}{\newton\meter} will get you
+\SI{350}{\newton\meter} and so on. The torque limiters in
+\texttt{TorqueCal.M\_EngMaxAutTab} must be scaled with this in mind. In this
+case \SI{400}{\newton\meter} between \SIrange{2780}{3920}{\rpm}. Values in
+between you need to recalculate, at 4300rpm the user wanted 390Nm, (400=330,
+350=320) means that 322=360, 324=370, 326=380, 328=390nm
 
-\Mfig{}
+\Mfig{EngMaxAutTab}
 
 If you want to use the same bin in manual cars all manual limiters must be calculated and set
 correctly!
 
 \textbf{NOTE: In Bio power bins TorqueCal.M\_EngMaxE85Tab !}
+\Mfig{columns}
 
 \chapter{Using the tuning wizard}
-\todo{Emphasize the limitations of tuning wizard}T7Suite incorporates a tuning wizard. This wizard allows you to automatically alter the maps in the
-binary file to get it to a stage I equivalent file. The wizard can be activated by selecting “Tuning” >
-“Easy tune to stage I” from the menu. A dialog will appear in which you can confirm that you want to
-tune the file to stage I. Once you’ve selected this the process will start. After a few seconds a report
-will appear showing all actions taken on your file.
+\todo{Emphasize the limitations of tuning wizard}
+
+T7Suite incorporates a tuning wizard. This wizard allows you to automatically
+alter the maps in the binary file to get it to a stage I equivalent file. The
+wizard can be activated by selecting \texttt{Tuning->Easy tune to stage 1} from the
+menu. A dialog will appear in which you can confirm that you want to tune the
+file to stage I. Once you’ve selected this the process will start. After a few
+seconds a report will appear showing all actions taken on your file.
 
 \Mfig{Tuning wizard images}
 
 \chapter{OpenSID values}
-T7Suite incorporates a function to allow visualization of information on the SID (System Information
-Display). This way you can view real-time information without utilizing the Canbus interface. You can
-select the variables you want the SID to display using the SID information selection option in T7Suite.
+T7Suite incorporates a function to allow visualization of information on the SID
+(System Information Display). This way you can view real-time information
+without utilizing the Canbus interface. You can select the variables you want
+the SID to display using the SID information selection option in T7Suite.
 
-Also, the software should be opened to be able to view the selected data on the SID. This is done in
-the firmware information screen.
+Also, the software should be opened to be able to view the selected data on the
+SID. This is done in the firmware information screen.
 \begin{figure}
     \centering
     \includegraphics[width=.9\linewidth]{sid.png}
