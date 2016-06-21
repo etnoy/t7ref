@@ -1031,21 +1031,23 @@ SID. This is done in the firmware information screen.
 Some tips on how to use the SID information option:
 \begin{itemize}
     \item
-        ECMStat.ST\_ActiveAirDem shows the current Airmass limiter
+        \texttt{ECMStat.ST\_ActiveAirDem} shows the current Airmass limiter.
     \item
-        ECMStat.P\_Engine shows calculated engine power (hp)
+        \texttt{ECMStat.P\_Engine} shows calculated engine power in horsepower.
     \item
-        ECMStat.AirFuelRatio shows calculated AFR
+        \texttt{ECMStat.AirFuelRatio} shows calculated AFR.
     \item
-        ECMStat.p\_Diff shows boost pressure (manifold – ambient) in 0.1 kPa units
+        \texttt{ECMStat.p\_Diff} shows boost pressure (manifold – ambient) in
+        \SI{0.1}{\kilo\pascal} units.
     \item
-        BstKnkProt.MapPointer shows the offset in 0.1 degrees for BstKnk.MaxAirmass (so, the
+        \texttt{BstKnkProt.MapPointer} shows the offset in \SI{0.1}{\degree} for
+        \texttt{BstKnk.MaxAirmass} (so, the
         ignition offset for knock)
     \item
-        ExhaustCal.ST\_Enable allows you to enable and disable the EGT algorithm. These algorithms
+        \texttt{ExhaustCal.ST\_Enable} allows you to enable and disable the EGT algorithm. These algorithms
         are based on the stock engine and won’t be properly calibrated for a stage 3+ setup.
     \item
-        KnkDetAdap.KnkCntCyl first 2 bytes show cylinder 1 knock count, next 2 bytes shows cylinder
+        \texttt{KnkDetAdap.KnkCntCyl} first 2 bytes show cylinder 1 knock count, next 2 bytes shows cylinder
         2 knock count etc.
 \end{itemize}
 
@@ -1112,36 +1114,51 @@ changer connector in the trunk (other spots are shown in the table below).
 \section{Saab I-bus communication}
 Courtesy of Tomili and General Failure
 
-The I-Bus is an internal bus (Instrumentation Bus) that connects together instruments such as the
-radio, ACC and the SID (Information Display). The I-bus is the non-critical bus which means that
-vehicle critical information is not sent over it. That is done through the P (powertrain) bus.
-The I-bus enables us to communicate with several devices in the car including the TWICE, DICE etc.
-Both the I and the P bus are CAN bus based communication buses which enables us to use a normal
-CAN adapter to interface with them.
+The I-Bus is an internal bus (Instrumentation Bus) that connects together
+instruments such as the radio, ACC and the SID (Information Display). The I-bus
+is the non-critical bus which means that vehicle critical information is not
+sent over it. That is done through the P (powertrain) bus. The I-bus enables us
+to communicate with several devices in the car including the TWICE, DICE etc.
+Both the I and the P bus are CAN bus based communication buses which enables us
+to use a normal CAN adapter to interface with them.
 
-The I bus follows the ISO 11898-2 standard which is the high speed variant, although it only
-implements a maximum communication speed of 47,619 Kbit/s. Messages on a CAN bus are sent
-within CAN frames that include an identifier number, number of data bytes, the actual data (called the
-payload) and checksum (to verify it the data was transferred correctly). There are two CAN frame
-formats: the basic frame (referred to as CAN2.0A) and the extended frame (referred to as CAN2.0B).
-The basic frame has a 11-bit identifier field, when the extended frame has a 29-bit identifier which
-makes it possible to extend the number of message types that can be sent over the bus.
-The I bus uses two signal (just like any other CAN bus connection) which are called I+ and I-. These
-refer to CAN High and CAN Low signals in general CAN terminology.
-Details on I bus communication:
+The I bus follows the ISO 11898-2 standard which is the high speed variant,
+although it only implements a maximum communication speed of
+\SI{47,619}{\kilo\bit\per\second}.
+Messages on a CAN bus are sent within CAN frames that include an identifier
+number, number of data bytes, the actual data (called the payload) and checksum
+(to verify it the data was transferred correctly). There are two CAN frame
+formats: the basic frame (referred to as CAN2.0A) and the extended frame
+(referred to as CAN2.0B). The basic frame has a 11-bit identifier field, when
+the extended frame has a 29-bit identifier which makes it possible to extend the
+number of message types that can be sent over the bus. The I bus uses two signal
+(just like any other CAN bus connection) which are called I+ and I-. These refer
+to CAN High and CAN Low signals in general CAN terminology. Details on I bus
+communication:
 
-Frame type: CAN 2.0A (11-bit identifiers)
-Bus speed: 47,619 Kbit/s
-Timing register settings: BTR0 0xCB, BTR1 0x9A
+\begin{table}
+    \centering
+    \begin{tabular}{ll}
 
-As an example the engine speed is located as a 16-bit integer value on message ID 460h
-(hexadecimal) in the second and third bytes (I define first byte as the most significant byte). Speed is
-in the same message in fourth and fifth bytes. The speed value is multiplied by ten, so you have to
-divide the 16-bit integer by 10 to get the real speed value.
-Here's an example ID 460h message: 00 03 9C 00 2A 00 00 00
-Engine rpm is 039Ch (hexadecimal format) = 924 (decimal format) = 942 RPM
-Speed is 002Ah = 42 = 4,2 km/h
+Frame type & CAN 2.0A (11-bit identifiers) \\
+Bus speed & \SI{47,619}{\kilo\bit\per\second} \\
+Timing register settings & BTR0 0xCB, BTR1 0x9A
+    \end{tabular}
+    \caption{}
+    \label{tab:}
+\end{table}
+
+As an example the engine speed is located as a 16-bit integer value on message
+ID 460h (hexadecimal) in the second and third bytes (I define first byte as the
+most significant byte). Speed is in the same message in fourth and fifth bytes.
+The speed value is multiplied by ten, so you have to divide the 16-bit integer
+by 10 to get the real speed value.
+
+Here's an example ID 460h message: \texttt{00 03 9C 00 2A 00 00 00}
+Engine rpm is \texttt{039Ch} (hexadecimal format) = 924 (decimal format) =
+\SI{942}{\rpm}. Speed is \texttt{002Ah} = 42 = \SI{4,2}{\kilo\meter\per\hour}.
 \todo{Finish I-bus and P-bus section}
+
 
 \chapter{General tuning advice}
 This chapter will describe some frequently made mistakes in handling the Trionic.
@@ -1156,7 +1173,7 @@ This chapter will describe some frequently made mistakes in handling the Trionic
     \item[Recommended EGT] Try to keep the exhaust gas temperature below 950
         degrees C.
     \item[Determining the maximum boost request for a given turbo] Check that the boost request level fits somehow to compressor map:
-        http://www.squirrelpf.com/turbocalc/index.php
+        \url{http://www.squirrelpf.com/turbocalc/index.php}\todo{Dead link!}
         In addition you can read appendix IV\todo{Internal link}.
     \item[Recommended maximum intake air temperature] Up to
         \SI{60}{\celsius} is good enough. If temperatures rise above
@@ -1164,6 +1181,59 @@ This chapter will describe some frequently made mistakes in handling the Trionic
         intercooler with an aluminium, cross-flow type. These are available from Speedparts, Abbott, ETS and
         others.
 \end{description}
+
+\chapter{Tools}
+\section{T7Suite}
+T7Suite has the following features:
+\begin{itemize}
+    \item Checksum verification and correction
+    \item Software ID adjustment
+    \item Immobilizer code adjustment
+    \item File comment adjustment
+    \item Box number adjustment
+    \item Extraction of symbol table
+    \item Map visualization
+    \item Compare maps in binary to another binary
+    \item Move maps from one binary to another
+    \item Downloading flash content from ECU through Canbus
+    \item Flashing ECU through Canbus
+    \item Real-time tuning (work in progress...)
+\end{itemize}
+
+For usage of this tool please refer to its user manual.
+
+\section{BD32}
+BD32.exe is the tool used to interface with the ECU through a BDM interface. It is DOS based and will
+run normally on Win95/98/Me. Ideally the user would boot into a DOS environment to use the tool.
+There is a windows version available but the author has no experience with that specific tool.
+
+\section{IDA Pro}
+IDAPro stands for Interactive DisAssembler Professional. It enables the user to disassemble binary
+files to its original source code. IDAPro is commercial software, not freeware.
+
+Example of how to use IDA Pro with a Trionic 7 box.
+\begin{enumerate}
+    \item Open binary/raw file
+    \item Set processor to Motorola series: 68330
+    \item Check the \texttt{Create RAM section}, start address 0xF00000, size 0xFFFF.
+    \item Go to address ROM:00000000 in 'IDA View-A' and hit D-key three times
+        to get dc.l \$FFFFEFFC
+    \item Go to the next address ROM:00000004 and hit D-key three times to get reset vector address (this
+varies from binary to binary)
+\item You should get e.g. dc.l unk\_5169A or something like that, double-click
+    the unk\_5169A text
+\item Your now in the place where the code execution starts, press C to disassemble
+\item Now, from the menu select Options -> General, go to Analysis tab and press
+    \texttt{Kernel options1} button
+\item Check \texttt{Make final analysis pass} and hit OK
+\item Press \texttt{Reanalyze program} button and wait a while (this really takes some time, a minute or so)
+\end{enumerate}
+
+\section{Hex editor}
+Hexworkshop (or UltraEdit) is a tool that comes in handy often. It can be used to view, search and
+modify the raw binary file.
+
+
 
 \chapter{Acknowledgements}
 The author would like to thank everyone on ecuproject for their help on getting
@@ -1176,6 +1246,138 @@ written by Tomi and General Failure.
 
 
 \appendix
+\chapter{Symbol list}
+This appendix will give a short description of the most important maps in Trionic 7. To give a list of all
+symbols would be kind of stupid because there are approximately 4000 (!!!) symbols in a Trionic 7
+binary.
+
+\begin{itemize}
+    \item
+AirCtrlCal.m\_MaxAirTab
+Airmass value from controller where area map has reached max-area and there is no point to increase
+the I-part. Resolution is 1 mg/c.
+    \item
+AirCtrlCal.m\_MaxAirE85Ta ( if running on E85 )
+Same as above for E85
+    \item
+BoostCal.I\_LimTab
+Load limit tab. to enable the I Part of boost regulator. If the load request from Airmass master is
+above this value plus the hysteresis is the I Part enabled and the throttle closed loop is disabled. If
+the load request from Airmass master is below this value is the I Part disabled and the throttle is
+allowed to run in closed loop.
+    \item
+BoostCal.P\_LimTab
+Load limit tab. to enable the P Part of boost regulator. If the load request from Airmass master is
+above this value plus the hysteresis is the P Part enabled. If the load request from Airmass master is
+below this value is the P Part disabled.
+    \item
+BoostCal.RegMap
+Main constant matrix. Resolution is 0.1 %.
+    \item
+BstKnkCal.MaxAirmass (divide by 3,1 for approx torque, ignition, airtemp etc affect this!)
+Map for max allowed Airmass for manual gearbox, m\_nHigh. Resolution is 1 mg/c.
+Knock limitation
+Knock control first retards the ignition timing for each cylinder. If the mean value for the ignition
+retardation for all the cylinder exceeds a certain value, fuel enrichment will take place.
+If the mean value for ignition retardation increases further, the maximum permissible air
+mass/combustion will be reduced with the values in the BstKnkCal.MaxAirmass maps. X axis
+represents degree of ignition retard. This reduction takes place continuously as the ignition retardation
+increases. The value constitutes the maximum air mass/combustion value permitted by knock control.
+Note
+Knock control on modern engines is not a safety function but a normal function. Consequently, it is
+considered normal when knock control reduces engine torque in certain cases. The engine knock
+control increases for e.g. high intake air temperatures or high coolant temperatures. Further
+influencing factors are driving at high altitudes and low octane fuel.
+Certain engine variants require petrol with an octane rating of 98 RON in order to provide the
+specified engine torque/power.
+    \item
+BstKnkCal.MaxAirmassAu
+Map for max allowed Airmass for automatic gearbox, m\_nHigh. Resolution is 1 mg/c.
+See text above
+    \item
+FCutCal.m\_AirInletLimit
+If the "MAF.m\_AirInletFuel" is higher than this limit during m\_AirInletTime will the fuelcut be activated
+( pressure guard ).
+    \item
+IgnE85Cal.fi\_AbsMap ( if you want to change the ignition )
+Ignition map for E85 fuel. Resolution is 0.1 °.
+IgnNormCal.Map ( if you want to change the ignition )
+Normal ignition map. Resolution is 0.1 °.
+MapChkCal.CheckSum (automatically updated in between every map change with T7suite!)
+    \item
+MaxVehicCal.v\_MaxSpeed (max vehicle speed )
+    \item
+PedalMapCal.m\_RequestMap
+Requested Airmass from the driver as a function of rpm and accelerator pedal position. Resolution is 1
+mg/c.
+    \item
+TorqueCal.M\_ManGearLim
+Maximum engine torque limit for each gear in the manual gearbox. Resolution is 1 Nm.
+Manual gearbox, engine torque limitation
+The maximum engine torque must be limited at low gear ratios for reasons of strength.
+The control module calculates the engaged gear by comparing engine speed with vehicle speed.
+If the gear ratio corresponds with gear 1 or R, the control module reads bus information "Reverse
+gear selected" from DICE to distinguish between them.
+Engine torque is limited to:
+Gear 1 or R is limited to 230 Nm on engine alternative B205E/B235E. Engine torque is limited to 350
+Nm in other gears.
+On engine alternative B235E, gear 5 is gradually limited if the engine speed is below 2400 rpm. This is
+to avoid vibration.
+On engine alternative B235R, gear 1 is limited to 280 Nm and reverse gear, R, is limited to 230 Nm.
+Torque limitation in gears 2-5 is 380 Nm.
+The engine torque value is converted to mg air/combustion and constitutes the maximum air
+mass/combustion allowed by the gearbox.
+    \item
+TorqueCal.m\_AirTorqMap This is where all torque limiters take their data from and therefore needs
+to be "fooled" if you are running 400nm+ or an automatic. 4sp automatic need the last row to be max
+330nm, 5sp 350nm, as this is what the gearbox ECU is requesting as a max limit.
+Data-matrix for nominal Airmass. Engine speed and torque are used as support points. The value in
+the matrix + friction Airmass (idle Airmass) will create the pointed torque at the pointed engine speed.
+Resolution is 1 mg/c.
+axis to the above map: TorqueCal.m\_AirXSP
+    \item
+TorqueCal.M\_EngMaxTab
+Data-table for maximum engine output torque for manual cars. Resolution is 1 Nm.
+    \item
+TorqueCal.M\_EngMaxAutTab
+Data-table for maximum engine output torque for automatic cars. Resolution is 1 Nm.
+TCM, engine torque limitation
+The maximum engine torque must be limited in gear R, 1 and 2 for reasons of strength. TCM will send
+continuous bus information specifying the maximum permissible engine torque. The maximum
+permitted engine torque is also limited during gear changing. TCM sends maximum permissible engine
+speed:
+\begin{table}
+    \centering
+    \begin{tabular}{ll}
+        Reverse & \SI{270}{\newton\meter} \\
+        1st & \SI{330}{\newton\meter} \\
+        2nd & \SI{330}{\newton\meter} \\
+        3rd & \SI{330}{\newton\meter} \\
+        4th & \SI{350}{\newton\meter} \\
+        5th & \SI{350}{\newton\meter}
+    \end{tabular}
+    \caption{}
+    \label{tab:}
+\end{table}
+TCM then sends maximum permissible engine torque to protect the gearbox.
+Trionic T7 converts Nm to mg air/combustion with help of the Airtorque map. The value constitutes
+the maximum air mass/combustion permitted by the automatic transmission and it is therefore we
+currently need to trick T7 to think more Airmass is still the same Nm.
+    \item
+TorqueCal.M\_5GearLimTab
+Data-table for maximum engine output torque for manual cars on fifth gear. Resolution is 1 Nm.
+    \item
+TorqueCal.M\_EngMaxE85Tab ( if running on E85 )
+Data-table for maximum engine output torque when running on E85. Resolution is 1 Nm.
+    \item
+TorqueCal.m\_PedYSP
+Air mass support points for (Calc) X\_AccPedalMap. Resolution is 1 mg/combustion.
+\end{itemize}
+
+\chapter{Trionic7 pinout}
+\todo{T7 pinout and connector pics}
+
+
 \chapter{BDM Technical Information}
 BDM stands for Background Debug Mode. This refers to the mode the Motorola microcontroller is
 forced into when activating the BDM interface. This mode enables us to hold the processor in the
@@ -1266,8 +1468,8 @@ Garrett GT17 for all models except for B205R and B235R. These latter engines are
 instead equipped with the Mitsubishi TD04-HL-15T (6cm2).
 
 For an introduction to turbocharger terminology and concepts, please
-see~\cite{GarrettTerminology}. For information on basic flow calculation and how
-to choose between turbochargers, see~\cite{TurboSelection}.
+see~\textcite{GarrettTerminology}. For information on basic flow calculation and how
+to choose between turbochargers, see~\textcite{Isaac-Lowry2004}.
 \begin{itemize}
     \item Compressor and turbine wheels. The turbine wheel is the vaned wheel
         that is in the exhaust gases from the engine. It is propelled by the
@@ -1343,7 +1545,7 @@ to choose between turbochargers, see~\cite{TurboSelection}.
 \section{Reading a compressor map}
 This section contains a short description of reading compressor maps. For a more
 detailed analysis, see
-\citeauthor{isaac-lowry_turbo_2004}~\cite{isaac-lowry_turbo_2004}. A 2-dimensional pressure map looks like this.
+\textcite{Isaac-Lowry2004}. A 2-dimensional pressure map looks like this.
 \Mfig{Compressor map}
 
 
@@ -1419,7 +1621,7 @@ small turbo. A small turbo will build boost fast but is less capable to make big
 
 \section{Selecting a different turbocharger}
 In order to put in a new turbocharger we first need some
-theory~\cite{isaac-lowry_turbo_2004}.
+theory~\cite{Isaac-Lowry2004}.
 \begin{definition}
     The engine volumetric
     flow\index{Engine Volumetric Flow} ($H$) in cfm \todo{imperial warning}is defined as
@@ -1431,7 +1633,7 @@ theory~\cite{isaac-lowry_turbo_2004}.
     of crankshaft revolutions per minute.
     \label{}
 \end{definition}
-We can then find the airflow in lb/min by computing~\cite{isaac-lowry_turbo_2004}.
+We can then find the airflow in lb/min by computing~\cite{Isaac-Lowry2004}.
 \begin{equation}
     N=\frac{29PH}{10.73T}
     \label{eqn:airflow}
@@ -1496,26 +1698,51 @@ limits and would flow approximately 420 cfm. Would we have done the same with th
 would most certainly be in the choke area and the turbo would be unable to get us the airflow that we
 required.
 
-For selecting the best wheel trim-housing, see~\cite{isaac-lowry_turbo_2004}.
+For selecting the best wheel trim-housing, see~\cite{Isaac-Lowry2004}.
 
 \section{Conclusion}
-Comparing the two compressor maps for TD04 and T25 (see \cref{chap:turbo-specs}) we can clearly see that the TD04 can flow
-more air at a higher pressure ratio and with a higher efficiency. Given the fact that the turbine blades
-are larger than in the T25, spool up will be a bit slower, but high end power will be much better.
-Upgrading your turbo will affect more than meets the eye. The VE map in the Trionic would probably
-need adjustments because the hardware in the airflow has been changed. This means the volumetric
-efficiency also changes and thus the correction table needs changing too.
-Also, when boost values rise, the intercoolers capacity for air flow comes into play. You must make
-sure that the intercooler is not so restrictive that upgrading the turbo will result in a burst intercooler.
-A high capacity cross flow intercooler would be a good option here.
-And last but not least, upgrading the turbo charger means – that is the goal here – more air flow to
-the cylinders and thus more oxygen to burn. If we upgrade the turbo we need to consider the
-injectors too. If the injectors can’t flow the amount of fuel needed to burn the amount of oxygen
-pushed into the cylinders we would have gained nothing.
+Comparing the two compressor maps for TD04 and T25 (see \cref{chap:turbo-specs})
+we can clearly see that the TD04 can flow more air at a higher pressure ratio
+and with a higher efficiency. Given the fact that the turbine blades are larger
+than in the T25, spool up will be a bit slower, but high end power will be much
+better. Upgrading your turbo will affect more than meets the eye. The VE map in
+the Trionic would probably need adjustments because the hardware in the airflow
+has been changed. This means the volumetric efficiency also changes and thus the
+correction table needs changing too. Also, when boost values rise, the
+intercoolers capacity for air flow comes into play. You must make sure that the
+intercooler is not so restrictive that upgrading the turbo will result in a
+burst intercooler. A high capacity cross flow intercooler would be a good option
+here. And last but not least, upgrading the turbo charger means – that is the
+goal here – more air flow to the cylinders and thus more oxygen to burn. If we
+upgrade the turbo we need to consider the injectors too. If the injectors can’t
+flow the amount of fuel needed to burn the amount of oxygen pushed into the
+cylinders we would have gained nothing.
 
 \chapter{Specifications of common Saab turbochargers}\label{chap:turbo-specs}
 \todo{Needs the GT17}
 \todo{Import from pdf}
+
+\chapter{Sensors and actuators}
+This appendix will list details about the sensors and actuators used in a T7 car.
+
+Sensors are devices used to gather information. In a Trionic 7 car a lot of
+sensors are used to determine what actions to take inside the ECU. These sensors
+are all analogue, which means they output a signal that has to be converted to
+digital numbers for the ECU to be able to understand them. Actuators on the
+other hand are devices that enable the ECU to interact with the processes in the
+car. Actuators are driven (or activated) by the Trionic be it directly or
+indirectly.
+
+\chapter{Connecting BDM interface to ECU}
+\Mfig{BDM pinout}
+\todo{Write this chapter, take note that Trionic7.pdf has incorrect info (see
+github issue)}
+
+Video guide: \url{https://www.youtube.com/watch?v=6FeAxgASqg4}
+
+\chapter{Intercooler calculation}
+This appendix is now found at \textcite{Estill}. Text removed from this
+document.
 
 \chapter{More information on Saab engine design}
 A previous version of this document contained information that was copied
