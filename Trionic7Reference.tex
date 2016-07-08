@@ -64,9 +64,10 @@
 \definecolor{theBlack}{gray}{0.2}
 \makeindex
 \DeclareSIUnit\combustion{c}
-\DeclareSIUnit\mgc{\milli\gram\per\combustion}
+\DeclareSIUnit[per-mode=reciprocal]\mgc{\milli\gram\per\combustion}
 \DeclareSIUnit{\rpm}{rpm}
 \DeclareSIUnit{\RON}{RON}
+
 
 %% If the following definition throws an error, you'll need a newer version of your
 % Latex distribution (from at least the second half of 2013)
@@ -145,9 +146,16 @@ enthusiasts over at TrionicTuning. Special thanks to chriva and many others.
 This project is ongoing and you can check out the current status of the project
 at \url{https://github.com/etnoy/t7ref}.
 
-\chapter{Acknowledgements}
-The author would like to thank everyone on ecuproject for their help on getting
-all this information together.
+\chapter{Changelog}
+\section*{From version 1.0 to 2.0}
+Version 1.0 of this document is popularly referred to as
+\enquote{\texttt{Trionic7.pdf}} as that was the filename. This is the version
+produced by Dilemma and written mainly in Microsoft Word. As the original .doc
+files appear to have been lost version 2.0 was created using \LaTeX{}. As a part
+of this project, several appendices had to be removed due to copyright reasons.
+A reader interested in finding that information is better off reading the actual
+technical articles as follows:
+\textcite{EstillIntercooler,FerozepuriaTurbocharger,Eriksson1998}.
 
 \listoftodos[Things to be done]
 This chapter tracks the todo list for this document. This includes information
@@ -1110,40 +1118,6 @@ following pin out on the DB9 connector.
 
 \Mfig{Desk connection to ecu}
 
-\section{OBD2 socket pinout}
-\todo{Section should be updated with p-bus obd2 information}On some models, the
-OBDII port enables you to connect to the I bus directly. On most models, you
-need to wire into the P-pus (preferably, because data transmission rates are
-tenfold of that on the Ibus) or into the I-bus directly. The P-bus can be found
-at the pins of the ECU (as described on the previous page), the I-bus can be
-found in a lot of places like the CD changer connector in the trunk (other spots
-are shown in the table below).
-
-\begin{table}
-    \centering
-    \begin{tabular}{ll}
-        Pin number & Description \\
-        \midrule
-        1 & \\
-        2 & J1850 Bus+ \\
-        3 & \\
-        4 & Chassis ground\\
-        5 & Signal ground\\
-        6 & CAN High (J-2284)\tablefootnote{Only on some models}\\
-        7 & ISO 9141-2 K-line\\
-        8 & \\
-        9 & \\
-        10 & J1850 Bus-\\
-        11 & Airbag Controller (?)\\
-        12 & ABS Controller (?)\\
-        13 & \\
-        14 & CAN Low (J-2284)\tablefootnote{Only on some models}\\
-        15 & ISO 9141-2 L-line\\
-        16 & Battery Power
-    \end{tabular}
-    \caption{}
-    \label{tab:}
-\end{table}
 
 \section{Saab I-bus communication}
 Courtesy of Tomili and General Failure
@@ -1191,9 +1165,89 @@ by 10 to get the real speed value.
 Here's an example ID 460h message: \texttt{00 03 9C 00 2A 00 00 00}
 Engine rpm is \texttt{039Ch} (hexadecimal format) = 924 (decimal format) =
 \SI{942}{\rpm}. Speed is \texttt{002Ah} = 42 = \SI{4,2}{\kilo\meter\per\hour}.
+
+\section{Trionic Data Initialization (220h)}
+This message (\cref{tab:220h}) must be sent before any queries to the Trionic
+can be sent. Trionic responds with a 238h message.
+\begin{table}
+    \centering
+    \begin{tabular}{lllllllll}
+        ID & Byte 0 & Byte 1 & Byte 2 & Byte 3 & Byte 4 & Byte 5 & Byte 6 & Byte 7 \\
+        \midrule
+        \texttt {220h} & \texttt{3Fh} & \texttt{81h} & \texttt{01h} & \texttt{33h} &
+        \texttt{02h} & \texttt{40h} & \texttt{00h}& \texttt{00h}
+    \end{tabular}
+    \caption{220h Trionic Data Initialization}
+    \label{tab:220h}
+\end{table}
+
+\section{Trionic Data Initialization Acknowledgement (238h)}
+Trionic sends this message (\cref{tab:238h}) after a 220h message has been sent on the bus.
+\begin{table}
+    \centering
+    \begin{tabular}{lllllllll}
+        ID & Byte 0 & Byte 1 & Byte 2 & Byte 3 & Byte 4 & Byte 5 & Byte 6 & Byte 7 \\
+        \midrule
+        \texttt {238h} & \texttt{40h} & \texttt{BFh} & \texttt{21h} & \texttt{C1h} &
+        \texttt{01h} & \texttt{11h} & \texttt{02h}& \texttt{58h}
+    \end{tabular}
+    \caption{238h Trionic Data Initialization Acknowledgement}
+    \label{tab:238h}
+\end{table}
+
+\section{Trionic Data Query (240h)}
+This message is sent as a command to the Trionic. It can be used to query
+\enquote{OBD2} information. I use the quotation marks because basically this
+information is also available from the OBD2 interface. The problem with the
+OBD2 interface is that it's slow. By using directly the I-Bus (or even better,
+the P-Bus) you can achieve refresh rates of \SIrange{10}{50}{\hertz}. The
+\texttt{DATA} byte below
+indicates what data is requested. The COMMAND byte is \texttt{01h} for requesting
+OBD2 information. With \texttt{COMMAND} byte \texttt{1Ah} you can request information
+from the Trionic software header. The header comprises of ASCII and
+hexadecimal data about e.g. Vehicle Identification Number (VIN), Immobilizer
+code, Software Saab part number, Hardware Saab part number and Software
+version string.
+
+The data query message is shown in \cref{tab:240h}. All known \texttt{DATA} values that can be queried is listen in
+\cref{tab:trionic-data-01h}.
+
+\begin{table}
+    \centering
+    \begin{tabular}{lllllllll}
+        ID & Byte 0 & Byte 1 & Byte 2 & Byte 3 & Byte 4 & Byte 5 & Byte 6 & Byte 7 \\
+        \midrule
+        \texttt {240h} & \texttt{40h} & \texttt{A1h} & \texttt{02h} &
+        \texttt{COMMAND} &
+        \texttt{DATA} & \texttt{00h} & \texttt{00h}& \texttt{00h}
+    \end{tabular}
+    \caption{240h Trionic Data Query}
+    \label{tab:240h}
+\end{table}
+
+\begin{table}
+    \centering
+    \begin{tabular}{lll}
+        \texttt{DATA} & Description & How to handle reply value \\
+        \midrule
+        \texttt{00h} & Some generic request (requires more research) & ? \\
+        \texttt{04h} & Calculated load value & unit is \\
+        \texttt{05h} & Coolant temperature & subtract 40, unit \si{\degreeCelsius} \\
+        \texttt{0Bh} & Manifold Air Pressure &MAP unit hPa \\
+        \texttt{0Ch} & Engine RPM & Divide by 4, unit \si{\per\minute} \\
+        \texttt{0Eh} & Engine timing advance & ? \\
+        \texttt{0Fh} & Intake air temperature & subtract 40, unit \si{\degreeCelsius} \\
+        \texttt{10h} & Mass Air Flow, MAF & divide by 100, unit \si{\gram\per\second} \\
+        \texttt{14h} & O2 sensor 1, Bank 1 & ? \\
+        \texttt{15h} & O2 sensor 2, Bank 1 & ? \\
+    \end{tabular}
+    \caption{All known \texttt{DATA} values that can be queries with
+    \texttt{COMMAND} byte \texttt{01h}.}
+    \label{tab:trionic-data-01h}
+\end{table}
+
+
 \todo{Finish I-bus and P-bus section}
-
-
 \chapter{General tuning advice}
 This chapter will describe some frequently made mistakes in handling the Trionic.
 \begin{description}
@@ -1255,14 +1309,14 @@ Example of how to use IDA Pro with a Trionic 7 box.
     \item Go to address ROM:00000000 in 'IDA View-A' and hit D-key three times
         to get dc.l \$FFFFEFFC
     \item Go to the next address ROM:00000004 and hit D-key three times to get reset vector address (this
-varies from binary to binary)
-\item You should get e.g. dc.l unk\_5169A or something like that, double-click
-    the unk\_5169A text
-\item Your now in the place where the code execution starts, press C to disassemble
-\item Now, from the menu select Options -> General, go to Analysis tab and press
-    \texttt{Kernel options1} button
-\item Check \texttt{Make final analysis pass} and hit OK
-\item Press \texttt{Reanalyze program} button and wait a while (this really takes some time, a minute or so)
+        varies from binary to binary)
+    \item You should get e.g. dc.l unk\_5169A or something like that, double-click
+        the unk\_5169A text
+    \item Your now in the place where the code execution starts, press C to disassemble
+    \item Now, from the menu select Options -> General, go to Analysis tab and press
+        \texttt{Kernel options1} button
+    \item Check \texttt{Make final analysis pass} and hit OK
+    \item Press \texttt{Reanalyze program} button and wait a while (this really takes some time, a minute or so)
 \end{enumerate}
 
 \section{Hex editor}
@@ -1277,32 +1331,32 @@ are approximately 4000 (!!!) symbols in a Trionic 7 binary.
 
 \begin{itemize}
     \item
-AirCtrlCal.m\_MaxAirTab
-Airmass value from controller where area map has reached max-area and there is no point to increase
-the I-part. Resolution is 1 mg/c.
+        AirCtrlCal.m\_MaxAirTab
+        Airmass value from controller where area map has reached max-area and there is no point to increase
+        the I-part. Resolution is 1 mg/c.
     \item
-AirCtrlCal.m\_MaxAirE85Ta ( if running on E85 )
-Same as above for E85
+        AirCtrlCal.m\_MaxAirE85Ta ( if running on E85 )
+        Same as above for E85
     \item
-BoostCal.I\_LimTab
-Load limit tab. to enable the I Part of boost regulator. If the load request
-from Airmass master is above this value plus the hysteresis is the I Part
-enabled and the throttle closed loop is disabled. If the load request from
-Airmass master is below this value is the I Part disabled and the throttle is
-allowed to run in closed loop.
+        BoostCal.I\_LimTab
+        Load limit tab. to enable the I Part of boost regulator. If the load request
+        from Airmass master is above this value plus the hysteresis is the I Part
+        enabled and the throttle closed loop is disabled. If the load request from
+        Airmass master is below this value is the I Part disabled and the throttle is
+        allowed to run in closed loop.
     \item
-BoostCal.P\_LimTab
-Load limit tab. to enable the P Part of boost regulator. If the load request
-from Airmass master is above this value plus the hysteresis is the P Part
-enabled. If the load request from Airmass master is below this value is the P
-Part disabled.
+        BoostCal.P\_LimTab
+        Load limit tab. to enable the P Part of boost regulator. If the load request
+        from Airmass master is above this value plus the hysteresis is the P Part
+        enabled. If the load request from Airmass master is below this value is the P
+        Part disabled.
     \item
-BoostCal.RegMap
-Main constant matrix. Resolution is 0.1 %.
+        BoostCal.RegMap
+        Main constant matrix. Resolution is 0.1 %.
     \item
-BstKnkCal.MaxAirmass (divide by 3,1 for approx torque, ignition, airtemp etc
-affect this!) Map for max allowed Airmass for manual gearbox, m\_nHigh.
-Resolution is 1 mg/c.
+        BstKnkCal.MaxAirmass (divide by 3,1 for approx torque, ignition, airtemp etc
+        affect this!) Map for max allowed Airmass for manual gearbox, m\_nHigh.
+        Resolution is 1 mg/c.
 \end{itemize}
 \section{Knock limitation}
 Knock control first retards the ignition timing for each cylinder. If the mean
@@ -1323,96 +1377,151 @@ variants require fuel with an octane rating of \SI{98}{\RON} in order to provide
 specified engine torque and power.
 \begin{itemize}
     \item
-BstKnkCal.MaxAirmassAu
-Map for max allowed Airmass for automatic gearbox, m\_nHigh. Resolution is 1 mg/c.
-See text above
+        BstKnkCal.MaxAirmassAu
+        Map for max allowed Airmass for automatic gearbox, m\_nHigh. Resolution is 1 mg/c.
+        See text above
     \item
-FCutCal.m\_AirInletLimit
-If the "MAF.m\_AirInletFuel" is higher than this limit during m\_AirInletTime will the fuelcut be activated
-( pressure guard ).
+        FCutCal.m\_AirInletLimit
+        If the "MAF.m\_AirInletFuel" is higher than this limit during m\_AirInletTime will the fuelcut be activated
+        ( pressure guard ).
     \item
-IgnE85Cal.fi\_AbsMap ( if you want to change the ignition )
-Ignition map for E85 fuel. Resolution is 0.1 °.
-IgnNormCal.Map ( if you want to change the ignition )
-Normal ignition map. Resolution is 0.1 °.
-MapChkCal.CheckSum (automatically updated in between every map change with T7suite!)
+        IgnE85Cal.fi\_AbsMap ( if you want to change the ignition )
+        Ignition map for E85 fuel. Resolution is 0.1 °.
+        IgnNormCal.Map ( if you want to change the ignition )
+        Normal ignition map. Resolution is 0.1 °.
+        MapChkCal.CheckSum (automatically updated in between every map change with T7suite!)
     \item
-MaxVehicCal.v\_MaxSpeed (max vehicle speed )
+        MaxVehicCal.v\_MaxSpeed (max vehicle speed )
     \item
-PedalMapCal.m\_RequestMap
-Requested Airmass from the driver as a function of rpm and accelerator pedal position. Resolution is 1
-mg/c.
+        PedalMapCal.m\_RequestMap
+        Requested Airmass from the driver as a function of rpm and accelerator pedal position. Resolution is 1
+        mg/c.
     \item
-TorqueCal.M\_ManGearLim
-Maximum engine torque limit for each gear in the manual gearbox. Resolution is 1 Nm.
-Manual gearbox, engine torque limitation
-The maximum engine torque must be limited at low gear ratios for reasons of strength.
-The control module calculates the engaged gear by comparing engine speed with vehicle speed.
-If the gear ratio corresponds with gear 1 or R, the control module reads bus information "Reverse
-gear selected" from DICE to distinguish between them.
-Engine torque is limited to:
-Gear 1 or R is limited to 230 Nm on engine alternative B205E/B235E. Engine torque is limited to 350
-Nm in other gears.
-On engine alternative B235E, gear 5 is gradually limited if the engine speed is below 2400 rpm. This is
-to avoid vibration.
-On engine alternative B235R, gear 1 is limited to 280 Nm and reverse gear, R, is limited to 230 Nm.
-Torque limitation in gears 2-5 is 380 Nm.
-The engine torque value is converted to \si{mgc} and constitutes the maximum air
-mass per combustion allowed by the gearbox.
+        TorqueCal.M\_ManGearLim
+        Maximum engine torque limit for each gear in the manual gearbox. Resolution is 1 Nm.
+        Manual gearbox, engine torque limitation
+        The maximum engine torque must be limited at low gear ratios for reasons of strength.
+        The control module calculates the engaged gear by comparing engine speed with vehicle speed.
+        If the gear ratio corresponds with gear 1 or R, the control module reads bus information "Reverse
+        gear selected" from DICE to distinguish between them.
+        Engine torque is limited to:
+        Gear 1 or R is limited to 230 Nm on engine alternative B205E/B235E. Engine torque is limited to 350
+        Nm in other gears.
+        On engine alternative B235E, gear 5 is gradually limited if the engine speed is below 2400 rpm. This is
+        to avoid vibration.
+        On engine alternative B235R, gear 1 is limited to 280 Nm and reverse gear, R, is limited to 230 Nm.
+        Torque limitation in gears 2-5 is 380 Nm.
+        The engine torque value is converted to \si{mgc} and constitutes the maximum air
+        mass per combustion allowed by the gearbox.
     \item
-TorqueCal.m\_AirTorqMap This is where all torque limiters take their data from
-and therefore needs to be "fooled" if you are running more than
-\SI{400}{\newton\meter} or an automatic.
-The four-speed automatic need the last row to be max \SI{330}{\newton\meter},
-five-speed \SI{350}{\newton\meter}, as this is what the gearbox ECU is
-requesting as a max limit. Data-matrix for nominal Airmass. Engine speed and
-torque are used as support points. The value in the matrix + friction Airmass
-(idle Airmass) will create the pointed torque at the pointed engine speed.
-Resolution is 1 mg/c. axis to the above map: TorqueCal.m\_AirXSP
+        TorqueCal.m\_AirTorqMap This is where all torque limiters take their data from
+        and therefore needs to be "fooled" if you are running more than
+        \SI{400}{\newton\meter} or an automatic.
+        The four-speed automatic need the last row to be max \SI{330}{\newton\meter},
+        five-speed \SI{350}{\newton\meter}, as this is what the gearbox ECU is
+        requesting as a max limit. Data-matrix for nominal Airmass. Engine speed and
+        torque are used as support points. The value in the matrix + friction Airmass
+        (idle Airmass) will create the pointed torque at the pointed engine speed.
+        Resolution is 1 mg/c. axis to the above map: TorqueCal.m\_AirXSP
     \item
-TorqueCal.M\_EngMaxTab
-Data-table for maximum engine output torque for manual cars. Resolution is 1 Nm.
+        TorqueCal.M\_EngMaxTab
+        Data-table for maximum engine output torque for manual cars. Resolution is 1 Nm.
     \item
-TorqueCal.M\_EngMaxAutTab
-Data-table for maximum engine output torque for automatic cars. Resolution is 1 Nm.
-TCM, engine torque limitation
-The maximum engine torque must be limited in gear R, 1 and 2 for reasons of strength. TCM will send
-continuous bus information specifying the maximum permissible engine torque. The maximum
-permitted engine torque is also limited during gear changing. TCM sends maximum permissible engine
-speed:
+        TorqueCal.M\_EngMaxAutTab
+        Data-table for maximum engine output torque for automatic cars. Resolution is 1 Nm.
+        TCM, engine torque limitation
+        The maximum engine torque must be limited in gear R, 1 and 2 for reasons of strength. TCM will send
+        continuous bus information specifying the maximum permissible engine torque. The maximum
+        permitted engine torque is also limited during gear changing. TCM sends maximum permissible engine
+        speed:
+        \begin{table}
+            \centering
+            \begin{tabular}{ll}
+                Reverse & \SI{270}{\newton\meter} \\
+                1st & \SI{330}{\newton\meter} \\
+                2nd & \SI{330}{\newton\meter} \\
+                3rd & \SI{330}{\newton\meter} \\
+                4th & \SI{350}{\newton\meter} \\
+                5th & \SI{350}{\newton\meter}
+            \end{tabular}
+            \caption{}
+            \label{tab:}
+        \end{table}
+        TCM then sends maximum permissible engine torque to protect the gearbox.
+        Trionic T7 converts \si{\newton\meter} to \si{\mgc} with help of the Airtorque map. The value constitutes
+        the maximum air mass/combustion permitted by the automatic transmission and it is therefore we
+        currently need to trick T7 to think more Airmass is still the same Nm.
+    \item
+        TorqueCal.M\_5GearLimTab
+        Data-table for maximum engine output torque for manual cars on fifth gear.
+        Resolution is \SI{1}{\newton\meter}.
+    \item
+        TorqueCal.M\_EngMaxE85Tab ( if running on E85 )
+        Data-table for maximum engine output torque when running on E85. Resolution is
+        \SI{1}{\newton\meter}.
+    \item
+        TorqueCal.m\_PedYSP
+        Air mass support points for (Calc) X\_AccPedalMap. Resolution is 1 \si{\mgc}.
+\end{itemize}
+
+\chapter{Pinout diagrams}
+Interfacing with the Trionic T7 unit through the CAN bus is possible
+
+Chip used on Trionic side: Intel AN825257
+Communication speed used: \SI{615}{\kilo\bit\per\second}.
+
+The most frequently used interface for this is the Lawicel CANUSB interface that can be found on
+www.canusb.com. This interface can convert CAN signals onto you USB port and vice versa. The
+interface has a USB port on one side – that connects to you computer – and an male RS232 (DB9)
+connector on the other side. This side connects to the CAN bus of the Trionic.
+
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\linewidth]{db9-pinout.png}
+    \caption{}
+    \label{fig:}
+\end{figure}
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\linewidth]{t7pinout.png}
+    \caption{}
+    \label{fig:}
+\end{figure}
+
+\section{OBD2 socket pinout}
+\todo{Section should be updated with p-bus obd2 information}On some models, the
+OBDII port enables you to connect to the I bus directly. On most models, you
+need to wire into the P-pus (preferably, because data transmission rates are
+tenfold of that on the Ibus) or into the I-bus directly. The P-bus can be found
+at the pins of the ECU (as described on the previous page), the I-bus can be
+found in a lot of places like the CD changer connector in the trunk (other spots
+are shown in the table below).
+
 \begin{table}
     \centering
     \begin{tabular}{ll}
-        Reverse & \SI{270}{\newton\meter} \\
-        1st & \SI{330}{\newton\meter} \\
-        2nd & \SI{330}{\newton\meter} \\
-        3rd & \SI{330}{\newton\meter} \\
-        4th & \SI{350}{\newton\meter} \\
-        5th & \SI{350}{\newton\meter}
+        Pin number & Description \\
+        \midrule
+        1 & \\
+        2 & J1850 Bus+ \\
+        3 & \\
+        4 & Chassis ground\\
+        5 & Signal ground\\
+        6 & CAN High (J-2284)\tablefootnote{Only on some models}\\
+        7 & ISO 9141-2 K-line\\
+        8 & \\
+        9 & \\
+        10 & J1850 Bus-\\
+        11 & Airbag Controller (?)\\
+        12 & ABS Controller (?)\\
+        13 & \\
+        14 & CAN Low (J-2284)\tablefootnote{Only on some models}\\
+        15 & ISO 9141-2 L-line\\
+        16 & Battery Power
     \end{tabular}
     \caption{}
     \label{tab:}
 \end{table}
-TCM then sends maximum permissible engine torque to protect the gearbox.
-Trionic T7 converts \si{\newton\meter} to \si{\mgc} with help of the Airtorque map. The value constitutes
-the maximum air mass/combustion permitted by the automatic transmission and it is therefore we
-currently need to trick T7 to think more Airmass is still the same Nm.
-    \item
-TorqueCal.M\_5GearLimTab
-Data-table for maximum engine output torque for manual cars on fifth gear.
-Resolution is \SI{1}{\newton\meter}.
-    \item
-TorqueCal.M\_EngMaxE85Tab ( if running on E85 )
-Data-table for maximum engine output torque when running on E85. Resolution is
-\SI{1}{\newton\meter}.
-    \item
-TorqueCal.m\_PedYSP
-Air mass support points for (Calc) X\_AccPedalMap. Resolution is 1 \si{\mgc}.
-\end{itemize}
-
-\chapter{Trionic7 pinout}
-\todo{T7 pinout and connector pics}
-
 
 \chapter{BDM Technical Information}
 BDM stands for Background Debug Mode. This refers to the mode the Motorola
@@ -1777,17 +1886,6 @@ github issue)}
 
 Video guide: \url{https://www.youtube.com/watch?v=6FeAxgASqg4}
 
-\chapter{Intercooler calculation}
-This appendix is now found at \textcite{Estill}. Text removed from this
-document.
-
-\chapter{More information on Saab engine design}
-A previous version of this document contained information that was copied
-from other published sources without permission. For information on knock and
-misfire detection, see
-\citeauthor{eriksson_closed_1998}~\cite{eriksson_closed_1998}. The section on
-intercoolers can be found in
-\citeauthor{ferozepuria_turbocharger}~\cite{ferozepuria_turbocharger}.
 \printindex
 
 \printbibliography
