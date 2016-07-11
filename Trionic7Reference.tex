@@ -59,7 +59,7 @@
 ]{biblatex}
 \usepackage{tablefootnote}
 \addbibresource{references.bib}
-\graphicspath{{./graphics/}}
+\graphicspath{{./graphics/},{./WIS/}}
 \definecolor{theWhite}{gray}{0.9}
 \definecolor{theBlack}{gray}{0.2}
 \makeindex
@@ -535,6 +535,7 @@ limit, just decrease the time in \texttt{LambdaCal.TimeOpenLoop}.
     \caption{Fuel injection correction map for knock conditions}
     \label{fig:}
 \end{figure}
+\section{Ignition}
 \begin{figure}
     \centering
     \includestandalone{ignition}
@@ -1485,6 +1486,12 @@ connector on the other side. This side connects to the CAN bus of the Trionic.
     \centering
     \includegraphics[width=\linewidth]{t7pinout.png}
     \caption{}
+    \label{fig:}
+\end{figure}
+\begin{figure}[]
+    \centering
+    \includegraphics[width=\linewidth]{E2EE27U.pdf}
+    \caption{T7 pins for 9-5}
     \label{fig:}
 \end{figure}
 
